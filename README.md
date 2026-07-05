@@ -1,4 +1,6 @@
-# fridge-expiry-tracker
+# 食材期限管理工具
+
+Repository name: `fridge-expiry-tracker`
 
 一個使用 Python、Streamlit 與 SQLite 製作的食材期限管理工具。使用者可以新增冰箱裡的食材、設定到期日期，系統會自動計算剩餘天數，並標示即將過期、今天到期、已過期與已使用的食材。
 
