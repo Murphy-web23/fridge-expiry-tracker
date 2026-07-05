@@ -48,7 +48,7 @@ def render_status_badge(status_label: str) -> str:
 
 
 def render_dashboard(df: pd.DataFrame) -> None:
-    st.title("食材期限管理 Dashboard")
+    st.title("食材期限總覽")
     st.caption("快速掌握冰箱裡最需要優先處理的食材。")
 
     stats = get_dashboard_stats(df)
@@ -201,14 +201,14 @@ def render_about() -> None:
     st.title("關於專案")
     st.write(
         "這是一個使用 Python、Streamlit 與 SQLite 製作的食材期限管理工具。"
-        "v1 專注在穩定記錄、期限計算、Dashboard 統計、篩選排序與基本操作。"
+        "v1 專注在穩定記錄、期限計算、期限總覽統計、篩選排序與基本操作。"
     )
     st.write("資料會儲存在本機的 `data/fridge.db`，不會上傳到雲端。")
 
     st.subheader("v1 功能")
     st.write("- 新增食材與到期日期")
     st.write("- 自動計算剩餘天數與狀態標籤")
-    st.write("- Dashboard 統計與最急需處理清單")
+    st.write("- 期限總覽統計與最急需處理清單")
     st.write("- 食材篩選、排序、標記已使用與刪除")
 
     st.subheader("未加入的功能")
@@ -222,11 +222,11 @@ def main() -> None:
     st.sidebar.title("食材期限管理工具")
     page = st.sidebar.radio(
         "選單",
-        ["Dashboard", "新增食材", "食材清單", "關於專案"],
+        ["期限總覽", "新增食材", "食材清單", "關於專案"],
     )
     st.sidebar.caption("v1 版本：專注在穩定可展示的核心功能。")
 
-    if page == "Dashboard":
+    if page == "期限總覽":
         render_dashboard(foods_df)
     elif page == "新增食材":
         render_add_food_form()
