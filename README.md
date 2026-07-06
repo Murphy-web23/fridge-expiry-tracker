@@ -36,6 +36,7 @@ v2 加入「家庭代碼」概念：同一個家庭代碼的成員會共用同�
 ## Demo Screenshots
 
 以下截圖對應目前 v2 家庭代碼共用冰箱版本。
+v1 截圖仍保留在 `assets/screenshots/v1/`，方便回看專案演進。
 
 ### 期限總覽
 
@@ -43,11 +44,11 @@ v2 加入「家庭代碼」概念：同一個家庭代碼的成員會共用同�
 
 ### 新增食材
 
-![新增食材畫面](assets/screenshots/v2/add-food.png)
+![新增食材畫面](assets/screenshots/v2/add_food.png)
 
 ### 食材清單
 
-![食材清單畫面](assets/screenshots/v2/food-list.png)
+![食材清單畫面](assets/screenshots/v2/food_list.png)
 
 ## 使用技術
 
@@ -81,8 +82,8 @@ fridge-expiry-tracker/
         │   ├── food-list.png
         │   └── overview.png
         └── v2/
-            ├── add-food.png
-            ├── food-list.png
+            ├── add_food.png
+            ├── food_list.png
             └── overview.png
 ```
 
