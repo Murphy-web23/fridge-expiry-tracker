@@ -8,6 +8,7 @@ from src.database import (
     delete_food,
     get_all_foods,
     init_db,
+    normalize_family_code,
     update_food_status,
 )
 from src.food_manager import (
@@ -26,9 +27,9 @@ st.set_page_config(
 )
 
 
-def load_foods() -> pd.DataFrame:
-    """Read foods from SQLite and append calculated fields for the UI."""
-    records = get_all_foods()
+def load_foods(family_code: str) -> pd.DataFrame:
+    """Read foods for one family and append calculated fields for the UI."""
+    records = get_all_foods(family_code)
     return enrich_food_records(records)
 
 
@@ -47,9 +48,48 @@ def render_status_badge(status_label: str) -> str:
     )
 
 
-def render_dashboard(df: pd.DataFrame) -> None:
+def display_text(value: object, fallback: str = "未記錄") -> str:
+    if pd.isna(value) or not str(value).strip():
+        return fallback
+    return str(value)
+
+
+def render_family_sidebar() -> tuple[str, str]:
+    if "family_code" not in st.session_state:
+        st.session_state.family_code = "demo-home"
+    if "member_name" not in st.session_state:
+        st.session_state.member_name = "訪客"
+
+    with st.sidebar.form("family_profile_form"):
+        st.subheader("家庭設定")
+        family_code_input = st.text_input(
+            "家庭代碼",
+            value=st.session_state.family_code,
+            help="同一個家庭代碼會共用同一份冰箱資料。",
+        )
+        member_name_input = st.text_input(
+            "成員名稱",
+            value=st.session_state.member_name,
+            help="用來記錄誰新增或處理食材。",
+        )
+        submitted = st.form_submit_button("套用")
+
+    if submitted:
+        st.session_state.family_code = normalize_family_code(family_code_input)
+        st.session_state.member_name = member_name_input.strip() or "訪客"
+        st.rerun()
+
+    family_code = normalize_family_code(st.session_state.family_code)
+    member_name = st.session_state.member_name.strip() or "訪客"
+    st.sidebar.caption(f"目前家庭：`{family_code}`")
+    st.sidebar.caption(f"目前成員：{member_name}")
+    return family_code, member_name
+
+
+def render_dashboard(df: pd.DataFrame, family_code: str) -> None:
     st.title("食材期限總覽")
     st.caption("快速掌握冰箱裡最需要優先處理的食材。")
+    st.info(f"目前顯示家庭代碼 `{family_code}` 的共用冰箱資料。")
 
     stats = get_dashboard_stats(df)
     col1, col2, col3, col4 = st.columns(4)
@@ -68,7 +108,16 @@ def render_dashboard(df: pd.DataFrame) -> None:
         return
 
     display_df = urgent_df[
-        ["name", "category", "quantity", "expiry_date", "days_left", "status_label", "note"]
+        [
+            "name",
+            "category",
+            "quantity",
+            "expiry_date",
+            "days_left",
+            "status_label",
+            "added_by",
+            "note",
+        ]
     ].rename(
         columns={
             "name": "名稱",
@@ -77,15 +126,17 @@ def render_dashboard(df: pd.DataFrame) -> None:
             "expiry_date": "到期日期",
             "days_left": "剩餘天數",
             "status_label": "狀態",
+            "added_by": "新增者",
             "note": "備註",
         }
     )
     st.dataframe(display_df, use_container_width=True, hide_index=True)
 
 
-def render_add_food_form() -> None:
+def render_add_food_form(family_code: str, member_name: str) -> None:
     st.title("新增食材")
     st.caption("記錄冰箱食材與到期日期，讓期限管理更直覺。")
+    st.info(f"新增到 `{family_code}` 的共用冰箱，新增者：{member_name}")
 
     with st.form("add_food_form", clear_on_submit=True):
         name = st.text_input("食材名稱", placeholder="例如：雞胸肉、牛奶、青江菜")
@@ -106,20 +157,23 @@ def render_add_food_form() -> None:
             st.error("到期日期不能早於購買日期。")
         else:
             add_food(
+                family_code=family_code,
                 name=name.strip(),
                 category=category,
                 quantity=quantity.strip(),
                 purchase_date=purchase_date.isoformat(),
                 expiry_date=expiry_date.isoformat(),
                 note=note.strip(),
+                added_by=member_name,
             )
             st.success(f"已新增「{name.strip()}」。")
             st.rerun()
 
 
-def render_food_list(df: pd.DataFrame) -> None:
+def render_food_list(df: pd.DataFrame, family_code: str, member_name: str) -> None:
     st.title("食材清單")
     st.caption("篩選、排序並管理每一筆食材。")
+    st.info(f"目前管理 `{family_code}` 的共用冰箱，操作者：{member_name}")
 
     col1, col2, col3 = st.columns([1.1, 1.1, 1.2])
     filter_option = col1.selectbox(
@@ -146,8 +200,13 @@ def render_food_list(df: pd.DataFrame) -> None:
                 st.subheader(row["name"])
                 st.write(f"分類：{row['category'] or '未分類'}")
                 st.write(f"數量：{row['quantity'] or '未填寫'}")
-                if row["note"]:
-                    st.write(f"備註：{row['note']}")
+                st.write(f"新增者：{display_text(row['added_by'])}")
+                used_by = display_text(row["used_by"], "")
+                if used_by:
+                    st.write(f"處理者：{used_by}")
+                note = display_text(row["note"], "")
+                if note:
+                    st.write(f"備註：{note}")
 
             with col_dates:
                 st.write(f"購買日期：{row['purchase_date'] or '未填寫'}")
@@ -158,14 +217,19 @@ def render_food_list(df: pd.DataFrame) -> None:
             with col_actions:
                 if row["status"] != "used":
                     if st.button("標記已使用", key=f"use_{row['id']}"):
-                        update_food_status(int(row["id"]), "used")
+                        update_food_status(
+                            int(row["id"]),
+                            "used",
+                            family_code=family_code,
+                            used_by=member_name,
+                        )
                         st.success(f"已將「{row['name']}」標記為已使用。")
                         st.rerun()
                 else:
                     st.caption("已使用")
 
                 if st.button("刪除", key=f"delete_{row['id']}"):
-                    delete_food(int(row["id"]))
+                    delete_food(int(row["id"]), family_code=family_code)
                     st.warning(f"已刪除「{row['name']}」。")
                     st.rerun()
 
@@ -179,6 +243,8 @@ def render_food_list(df: pd.DataFrame) -> None:
             "expiry_date",
             "days_left",
             "status_label",
+            "added_by",
+            "used_by",
             "note",
         ]
     ].rename(
@@ -190,6 +256,8 @@ def render_food_list(df: pd.DataFrame) -> None:
             "expiry_date": "到期日期",
             "days_left": "剩餘天數",
             "status_label": "狀態標籤",
+            "added_by": "新增者",
+            "used_by": "處理者",
             "note": "備註",
         }
     )
@@ -201,25 +269,29 @@ def render_about() -> None:
     st.title("關於專案")
     st.write(
         "這是一個使用 Python、Streamlit 與 SQLite 製作的食材期限管理工具。"
-        "v1 專注在穩定記錄、期限計算、期限總覽統計、篩選排序與基本操作。"
+        "v2 加入家庭代碼，讓同一家人可以共用同一份冰箱資料。"
     )
     st.write("資料會儲存在本機的 `data/fridge.db`，不會上傳到雲端。")
 
-    st.subheader("v1 功能")
+    st.subheader("目前功能")
+    st.write("- 家庭代碼共用冰箱資料")
+    st.write("- 成員名稱記錄新增者與處理者")
     st.write("- 新增食材與到期日期")
     st.write("- 自動計算剩餘天數與狀態標籤")
     st.write("- 期限總覽統計與最急需處理清單")
     st.write("- 食材篩選、排序、標記已使用與刪除")
 
     st.subheader("未加入的功能")
-    st.write("LINE 通知、OCR、AI 食譜推薦與 App 版本會先放在 Roadmap，不放進 v1。")
+    st.write("正式登入、LINE 通知、OCR、AI 食譜推薦與 App 版本會先放在 Roadmap。")
 
 
 def main() -> None:
     init_db()
-    foods_df = load_foods()
 
     st.sidebar.title("食材期限管理工具")
+    family_code, member_name = render_family_sidebar()
+    foods_df = load_foods(family_code)
+
     page = st.sidebar.radio(
         "選單",
         ["期限總覽", "新增食材", "食材清單", "關於專案"],
@@ -227,11 +299,11 @@ def main() -> None:
     st.sidebar.caption("v1 版本：專注在穩定可展示的核心功能。")
 
     if page == "期限總覽":
-        render_dashboard(foods_df)
+        render_dashboard(foods_df, family_code)
     elif page == "新增食材":
-        render_add_food_form()
+        render_add_food_form(family_code, member_name)
     elif page == "食材清單":
-        render_food_list(foods_df)
+        render_food_list(foods_df, family_code, member_name)
     else:
         render_about()
 

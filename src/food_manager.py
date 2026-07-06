@@ -39,6 +39,7 @@ def get_status_label(status: str, days_left: int) -> str:
 def enrich_food_records(records: list[dict]) -> pd.DataFrame:
     columns = [
         "id",
+        "family_code",
         "name",
         "category",
         "quantity",
@@ -46,6 +47,9 @@ def enrich_food_records(records: list[dict]) -> pd.DataFrame:
         "expiry_date",
         "note",
         "status",
+        "added_by",
+        "used_by",
+        "used_at",
         "created_at",
     ]
     df = pd.DataFrame(records, columns=columns)
