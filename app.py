@@ -5,7 +5,9 @@ import streamlit as st
 
 from src.database import (
     add_food,
+    configure_database,
     delete_food,
+    get_database_label,
     get_all_foods,
     init_db,
     normalize_family_code,
@@ -33,6 +35,14 @@ def load_foods(family_code: str) -> pd.DataFrame:
     return enrich_food_records(records)
 
 
+def get_database_url_from_secrets() -> str | None:
+    # Streamlit Cloud 的 DATABASE_URL 會放在 Secrets；本機沒有設定時回傳 None。
+    try:
+        return st.secrets.get("DATABASE_URL")
+    except Exception:
+        return None
+
+
 def render_status_badge(status_label: str) -> str:
     color_map = {
         "Used": "#64748b",
@@ -55,6 +65,7 @@ def display_text(value: object, fallback: str = "未記錄") -> str:
 
 
 def render_family_sidebar() -> tuple[str, str]:
+    # 家庭代碼存在 session_state，重新整理頁面時仍會回到預設值。
     if "family_code" not in st.session_state:
         st.session_state.family_code = "demo-home"
     if "member_name" not in st.session_state:
@@ -81,6 +92,7 @@ def render_family_sidebar() -> tuple[str, str]:
 
     family_code = normalize_family_code(st.session_state.family_code)
     member_name = st.session_state.member_name.strip() or "訪客"
+    st.sidebar.caption(f"資料庫：{get_database_label()}")
     st.sidebar.caption(f"目前家庭：`{family_code}`")
     st.sidebar.caption(f"目前成員：{member_name}")
     return family_code, member_name
@@ -268,12 +280,14 @@ def render_food_list(df: pd.DataFrame, family_code: str, member_name: str) -> No
 def render_about() -> None:
     st.title("關於專案")
     st.write(
-        "這是一個使用 Python、Streamlit 與 SQLite 製作的食材期限管理工具。"
-        "v2 加入家庭代碼，讓同一家人可以共用同一份冰箱資料。"
+        "這是一個使用 Python、Streamlit、SQLite 與 PostgreSQL 製作的食材期限管理工具。"
+        "v3 支援雲端資料庫，讓公開部署後的資料可以持久保存。"
     )
-    st.write("資料會儲存在本機的 `data/fridge.db`，不會上傳到雲端。")
+    st.write(f"目前資料庫模式：{get_database_label()}")
 
     st.subheader("目前功能")
+    st.write("- Streamlit Secrets 設定 `DATABASE_URL` 後可使用 PostgreSQL")
+    st.write("- 未設定 `DATABASE_URL` 時會使用本機 SQLite")
     st.write("- 家庭代碼共用冰箱資料")
     st.write("- 成員名稱記錄新增者與處理者")
     st.write("- 新增食材與到期日期")
@@ -286,6 +300,7 @@ def render_about() -> None:
 
 
 def main() -> None:
+    configure_database(get_database_url_from_secrets())
     init_db()
 
     st.sidebar.title("食材期限管理工具")
@@ -296,7 +311,7 @@ def main() -> None:
         "選單",
         ["期限總覽", "新增食材", "食材清單", "關於專案"],
     )
-    st.sidebar.caption("v1 版本：專注在穩定可展示的核心功能。")
+    st.sidebar.caption("v3 版本：支援家庭共用與雲端資料保存。")
 
     if page == "期限總覽":
         render_dashboard(foods_df, family_code)

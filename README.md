@@ -2,9 +2,9 @@
 
 Repository name: `fridge-expiry-tracker`
 
-一個使用 Python、Streamlit 與 SQLite 製作的食材期限管理工具。使用者可以新增冰箱裡的食材、設定到期日期，系統會自動計算剩餘天數，並標示即將過期、今天到期、已過期與已使用的食材。
+一個使用 Python、Streamlit、SQLite 與 PostgreSQL 製作的食材期限管理工具。使用者可以新增冰箱裡的食材、設定到期日期，系統會自動計算剩餘天數，並標示即將過期、今天到期、已過期與已使用的食材。
 
-v2 加入「家庭代碼」概念：同一個家庭代碼的成員會共用同一份冰箱資料，不同家庭代碼之間的食材清單會分開。這個版本適合作為家人測試與作品集展示，尚未加入正式登入系統。
+v3 支援雲端 PostgreSQL。部署到 Streamlit Community Cloud 後，只要在 Secrets 設定 `DATABASE_URL`，食材資料就能保存到雲端資料庫；本機開發時若沒有設定 `DATABASE_URL`，會自動使用 SQLite。
 
 ## 專案動機
 
@@ -14,16 +14,18 @@ v2 加入「家庭代碼」概念：同一個家庭代碼的成員會共用同�
 
 - 使用 Streamlit 建立可互動的資料管理介面
 - 使用 SQLite 做本機資料保存
+- 使用 PostgreSQL 做雲端資料保存
 - 將 UI、資料庫操作與期限計算拆分成不同模組
 - 使用家庭代碼建立簡單的多人共享資料模型
-- 控制功能範圍，先完成可展示版本，再規劃登入與雲端資料庫
+- 控制功能範圍，先完成可展示版本，再規劃登入與家庭邀請碼
 
 ## 功能特色
 
 - 使用家庭代碼區分不同家庭的冰箱資料
 - 使用成員名稱記錄誰新增食材、誰標記已使用
 - 新增食材名稱、分類、數量、購買日期、到期日期與備註
-- 使用 SQLite 儲存資料，資料庫位於 `data/fridge.db`
+- 部署環境可使用 PostgreSQL 儲存資料
+- 本機環境可使用 SQLite 儲存資料，資料庫位於 `data/fridge.db`
 - 程式啟動時自動建立或更新 `foods` 資料表
 - 自動計算剩餘天數 `days_left`
 - 依規則顯示 `Used`、`Expired`、`Today`、`Soon`、`Safe` 狀態標籤
@@ -35,7 +37,7 @@ v2 加入「家庭代碼」概念：同一個家庭代碼的成員會共用同�
 
 ## Demo Screenshots
 
-以下截圖對應目前 v2 家庭代碼共用冰箱版本。
+以下截圖對應家庭代碼共用冰箱介面，v3 在資料層新增 PostgreSQL 支援，主要畫面與 v2 相同。
 v1 截圖仍保留在 `assets/screenshots/v1/`，方便回看專案演進。
 
 ### 期限總覽
@@ -56,6 +58,8 @@ v1 截圖仍保留在 `assets/screenshots/v1/`，方便回看專案演進。
 - Streamlit
 - pandas
 - SQLite `sqlite3`
+- PostgreSQL
+- psycopg2
 
 ## 專案架構
 
@@ -65,6 +69,8 @@ fridge-expiry-tracker/
 ├── README.md
 ├── requirements.txt
 ├── .gitignore
+├── .streamlit/
+│   └── secrets.toml.example
 ├── data/
 │   └── .gitkeep
 ├── src/
@@ -103,13 +109,33 @@ pip install -r requirements.txt
 streamlit run app.py
 ```
 
-啟動後，Streamlit 會在瀏覽器開啟本機服務。程式第一次執行時會自動建立：
+啟動後，Streamlit 會在瀏覽器開啟本機服務。本機沒有設定 `DATABASE_URL` 時，程式會自動使用 SQLite，第一次執行時會建立：
 
 ```text
 data/fridge.db
 ```
 
-`data/fridge.db` 是使用者本機資料，已加入 `.gitignore`，不會提交到 GitHub。
+`data/fridge.db` 是本機開發資料，已加入 `.gitignore`，不會提交到 GitHub。
+
+## Streamlit Cloud 資料庫設定
+
+如果要讓公開部署後的資料不因重新整理、休眠或重新部署而消失，請使用雲端 PostgreSQL，例如 Neon 或 Supabase。
+
+在 Streamlit Community Cloud 的 App 設定中加入 Secrets：
+
+```toml
+DATABASE_URL = "postgresql://username:password@host:5432/database?sslmode=require"
+```
+
+設定後重新部署 App，程式會自動改用 PostgreSQL。若沒有設定 `DATABASE_URL`，則會使用本機 SQLite。
+
+專案內提供範例檔：
+
+```text
+.streamlit/secrets.toml.example
+```
+
+請不要把真正的資料庫密碼提交到 GitHub。
 
 ## 家庭代碼使用方式
 
@@ -186,8 +212,8 @@ expiry_date - today
 
 ## 專案限制
 
-- v2 使用家庭代碼做簡單資料隔離，尚未加入正式登入或權限管理。
-- 目前仍使用 SQLite，適合本機與作品集展示，不適合作為正式多人雲端資料庫。
+- v3 使用家庭代碼做簡單資料隔離，尚未加入正式登入或權限管理。
+- v3 已支援 PostgreSQL，但目前尚未加入正式使用者帳號與權限控管。
 - 公開部署時，請不要輸入敏感或真實個資。
 - 日期需要手動輸入，尚未支援 OCR 辨識包裝日期。
 - 尚未加入通知功能，因此需要使用者主動開啟 App 查看。
@@ -200,19 +226,9 @@ expiry_date - today
 - [x] 標記已使用 / 刪除食材
 - [x] 家庭代碼共用冰箱
 - [x] 新增者 / 處理者記錄
-- [ ] 雲端 PostgreSQL 資料庫
+- [x] 雲端 PostgreSQL 資料庫
 - [ ] 家庭邀請碼與正式成員管理
 - [ ] LINE Messaging API 每日提醒
 - [ ] OCR 辨識食品包裝上的有效日期
 - [ ] 根據即將過期食材產生料理建議
 - [ ] PWA / App 版本
-
-## 面試時可以說明的重點
-
-- v1 從單機食材期限管理開始，v2 擴充成家庭共享資料模型。
-- 透過 `family_code` 讓不同家庭資料分開，同一家人可以共用同一份冰箱清單。
-- 使用 `added_by` 與 `used_by` 讓食材操作有基本追蹤性。
-- 資料表啟動時會自動遷移欄位，讓舊資料庫也能升級到 v2。
-- 將 Streamlit UI、資料庫操作、期限計算與共用工具拆分到不同檔案，讓程式比較容易維護。
-- 使用 `days_left` 衍生欄位串起總覽統計、狀態標籤、篩選與排序。
-- 下一步可以升級到 PostgreSQL 與正式登入，變成更完整的多人共用工具。

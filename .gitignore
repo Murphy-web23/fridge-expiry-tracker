@@ -2,5 +2,6 @@
 __pycache__/
 *.pyc
 .env
+.streamlit/secrets.toml
 data/fridge.db
 .DS_Store
