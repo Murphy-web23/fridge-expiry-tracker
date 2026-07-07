@@ -37,18 +37,18 @@ v3 支援雲端 PostgreSQL。部署到 Streamlit Community Cloud 後，只要在
 
 ## Demo Screenshots
 
-以下截圖對應家庭代碼共用冰箱介面，v3 在資料層新增 PostgreSQL 支援，主要畫面與 v2 相同。
-v1 截圖仍保留在 `assets/screenshots/v1/`，方便回看專案演進。
+以下截圖對應目前 v3 版本。v3 已接上 PostgreSQL，側邊欄會顯示目前資料庫模式。
+v1 / v2 截圖仍保留在 `assets/screenshots/`，方便回看專案演進。
 
-### 期限總覽
+### v3 PostgreSQL 資料保存
 
-![期限總覽畫面](assets/screenshots/v2/overview.png)
+![v3 PostgreSQL 期限總覽畫面](assets/screenshots/v3/postgres_overview.png)
 
-### 新增食材
+### v2 新增食材流程
 
 ![新增食材畫面](assets/screenshots/v2/add_food.png)
 
-### 食材清單
+### v2 食材清單管理
 
 ![食材清單畫面](assets/screenshots/v2/food_list.png)
 
@@ -87,10 +87,12 @@ fridge-expiry-tracker/
         │   ├── add-food.png
         │   ├── food-list.png
         │   └── overview.png
-        └── v2/
-            ├── add_food.png
-            ├── food_list.png
-            └── overview.png
+        ├── v2/
+        │   ├── add_food.png
+        │   ├── food_list.png
+        │   └── overview.png
+        └── v3/
+            └── postgres_overview.png
 ```
 
 ## 安裝方式
