@@ -78,13 +78,24 @@ def _get_columns(conn, table_name: str) -> set[str]:
     return {row["name"] for row in rows}
 
 
-def _add_column_if_missing(conn, existing_columns: set[str], column_name: str, column_definition: str) -> None:
+def _add_column_if_missing(
+    conn,
+    table_name: str,
+    existing_columns: set[str],
+    column_name: str,
+    column_definition: str,
+) -> None:
     if use_postgres():
-        _execute(conn, f"ALTER TABLE foods ADD COLUMN IF NOT EXISTS {column_name} {column_definition}")
+        _execute(conn, f"ALTER TABLE {table_name} ADD COLUMN IF NOT EXISTS {column_name} {column_definition}")
         existing_columns.add(column_name)
     elif column_name not in existing_columns:
-        conn.execute(f"ALTER TABLE foods ADD COLUMN {column_name} {column_definition}")
+        conn.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} {column_definition}")
         existing_columns.add(column_name)
+
+
+def _fetchone(conn, sql: str, params: tuple = ()):
+    rows = _fetchall(conn, sql, params)
+    return rows[0] if rows else None
 
 
 def init_db() -> None:
@@ -114,11 +125,39 @@ def init_db() -> None:
             """,
         )
 
+        # v4 新增家庭主檔，邀請碼用來讓家人加入同一個家庭。
+        _execute(
+            conn,
+            f"""
+            CREATE TABLE IF NOT EXISTS families (
+                id {id_column},
+                family_code TEXT UNIQUE NOT NULL,
+                family_name TEXT,
+                invite_code TEXT NOT NULL,
+                created_at TEXT
+            )
+            """,
+        )
+
+        # v4 新增成員表，先用成員名稱紀錄，不做正式帳號登入。
+        _execute(
+            conn,
+            f"""
+            CREATE TABLE IF NOT EXISTS family_members (
+                id {id_column},
+                family_code TEXT NOT NULL,
+                member_name TEXT NOT NULL,
+                joined_at TEXT,
+                UNIQUE (family_code, member_name)
+            )
+            """,
+        )
+
         existing_columns = _get_columns(conn, "foods")
-        _add_column_if_missing(conn, existing_columns, "family_code", "TEXT DEFAULT 'demo-home'")
-        _add_column_if_missing(conn, existing_columns, "added_by", "TEXT")
-        _add_column_if_missing(conn, existing_columns, "used_by", "TEXT")
-        _add_column_if_missing(conn, existing_columns, "used_at", "TEXT")
+        _add_column_if_missing(conn, "foods", existing_columns, "family_code", "TEXT DEFAULT 'demo-home'")
+        _add_column_if_missing(conn, "foods", existing_columns, "added_by", "TEXT")
+        _add_column_if_missing(conn, "foods", existing_columns, "used_by", "TEXT")
+        _add_column_if_missing(conn, "foods", existing_columns, "used_at", "TEXT")
 
         placeholder = _placeholder()
         _execute(
@@ -130,12 +169,163 @@ def init_db() -> None:
             """.format(placeholder=placeholder),
             (DEFAULT_FAMILY_CODE,),
         )
+        _ensure_default_family(conn)
         conn.commit()
 
 
 def normalize_family_code(family_code: str) -> str:
     cleaned_code = family_code.strip().lower().replace(" ", "-")
     return cleaned_code or DEFAULT_FAMILY_CODE
+
+
+def normalize_invite_code(invite_code: str) -> str:
+    return invite_code.strip()
+
+
+def _ensure_default_family(conn) -> None:
+    default_family = _fetchone(
+        conn,
+        "SELECT family_code FROM families WHERE family_code = {p}".format(p=_placeholder()),
+        (DEFAULT_FAMILY_CODE,),
+    )
+    if default_family:
+        return
+
+    now = datetime.now().isoformat(timespec="seconds")
+    placeholder = _placeholder()
+    _execute(
+        conn,
+        """
+        INSERT INTO families (family_code, family_name, invite_code, created_at)
+        VALUES ({p}, {p}, {p}, {p})
+        """.format(p=placeholder),
+        (DEFAULT_FAMILY_CODE, "示範家庭", "demo123", now),
+    )
+
+
+def create_family(
+    family_code: str,
+    family_name: str,
+    invite_code: str,
+    member_name: str,
+) -> dict:
+    normalized_family_code = normalize_family_code(family_code)
+    normalized_invite_code = normalize_invite_code(invite_code)
+    clean_member_name = member_name.strip() or "訪客"
+
+    if not normalized_invite_code:
+        raise ValueError("請輸入邀請碼")
+
+    now = datetime.now().isoformat(timespec="seconds")
+    placeholder = _placeholder()
+
+    with closing(get_connection()) as conn:
+        existing_family = _fetchone(
+            conn,
+            "SELECT family_code FROM families WHERE family_code = {p}".format(p=placeholder),
+            (normalized_family_code,),
+        )
+        if existing_family:
+            raise ValueError("這個家庭代碼已經存在，請改用加入家庭")
+
+        _execute(
+            conn,
+            """
+            INSERT INTO families (family_code, family_name, invite_code, created_at)
+            VALUES ({p}, {p}, {p}, {p})
+            """.format(p=placeholder),
+            (
+                normalized_family_code,
+                family_name.strip() or normalized_family_code,
+                normalized_invite_code,
+                now,
+            ),
+        )
+        _insert_family_member(conn, normalized_family_code, clean_member_name, now)
+        conn.commit()
+
+    return get_family(normalized_family_code) or {}
+
+
+def join_family(family_code: str, invite_code: str, member_name: str) -> dict:
+    normalized_family_code = normalize_family_code(family_code)
+    normalized_invite_code = normalize_invite_code(invite_code)
+    clean_member_name = member_name.strip() or "訪客"
+
+    with closing(get_connection()) as conn:
+        family = _fetchone(
+            conn,
+            """
+            SELECT family_code, family_name, invite_code, created_at
+            FROM families
+            WHERE family_code = {p}
+            """.format(p=_placeholder()),
+            (normalized_family_code,),
+        )
+        if not family:
+            raise ValueError("找不到這個家庭，請先建立家庭")
+        if family["invite_code"] != normalized_invite_code:
+            raise ValueError("邀請碼不正確")
+
+        now = datetime.now().isoformat(timespec="seconds")
+        _insert_family_member(conn, normalized_family_code, clean_member_name, now)
+        conn.commit()
+
+    return get_family(normalized_family_code) or {}
+
+
+def _insert_family_member(conn, family_code: str, member_name: str, joined_at: str) -> None:
+    placeholder = _placeholder()
+    if use_postgres():
+        _execute(
+            conn,
+            """
+            INSERT INTO family_members (family_code, member_name, joined_at)
+            VALUES (%s, %s, %s)
+            ON CONFLICT (family_code, member_name) DO NOTHING
+            """,
+            (family_code, member_name, joined_at),
+        )
+    else:
+        _execute(
+            conn,
+            """
+            INSERT OR IGNORE INTO family_members (family_code, member_name, joined_at)
+            VALUES ({p}, {p}, {p})
+            """.format(p=placeholder),
+            (family_code, member_name, joined_at),
+        )
+
+
+def get_family(family_code: str) -> dict | None:
+    normalized_family_code = normalize_family_code(family_code)
+    with closing(get_connection()) as conn:
+        family = _fetchone(
+            conn,
+            """
+            SELECT family_code, family_name, invite_code, created_at
+            FROM families
+            WHERE family_code = {p}
+            """.format(p=_placeholder()),
+            (normalized_family_code,),
+        )
+    return dict(family) if family else None
+
+
+def get_family_members(family_code: str) -> list[dict]:
+    normalized_family_code = normalize_family_code(family_code)
+    with closing(get_connection()) as conn:
+        rows = _fetchall(
+            conn,
+            """
+            SELECT member_name, joined_at
+            FROM family_members
+            WHERE family_code = {p}
+            ORDER BY joined_at ASC, member_name ASC
+            """.format(p=_placeholder()),
+            (normalized_family_code,),
+        )
+    return [dict(row) for row in rows]
 
 
 def add_food(

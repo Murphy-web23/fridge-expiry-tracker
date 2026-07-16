@@ -4,7 +4,7 @@ Repository name: `fridge-expiry-tracker`
 
 一個使用 Python、Streamlit、SQLite 與 PostgreSQL 製作的食材期限管理工具。使用者可以新增冰箱裡的食材、設定到期日期，系統會自動計算剩餘天數，並標示即將過期、今天到期、已過期與已使用的食材。
 
-v3 支援雲端 PostgreSQL。部署到 Streamlit Community Cloud 後，只要在 Secrets 設定 `DATABASE_URL`，食材資料就能保存到雲端資料庫；本機開發時若沒有設定 `DATABASE_URL`，會自動使用 SQLite。
+v4 加入家庭邀請碼與成員管理基礎流程。使用者可以建立家庭、設定邀請碼，家人輸入正確邀請碼後即可加入同一個家庭並共用冰箱資料。
 
 ## 專案動機
 
@@ -17,11 +17,14 @@ v3 支援雲端 PostgreSQL。部署到 Streamlit Community Cloud 後，只要在
 - 使用 PostgreSQL 做雲端資料保存
 - 將 UI、資料庫操作與期限計算拆分成不同模組
 - 使用家庭代碼建立簡單的多人共享資料模型
-- 控制功能範圍，先完成可展示版本，再規劃登入與家庭邀請碼
+- 使用邀請碼建立基礎加入流程，先不做正式登入
 
 ## 功能特色
 
 - 使用家庭代碼區分不同家庭的冰箱資料
+- 可建立家庭並設定邀請碼
+- 成員輸入正確邀請碼後可加入家庭
+- 側邊欄顯示目前家庭名稱與成員列表
 - 使用成員名稱記錄誰新增食材、誰標記已使用
 - 新增食材名稱、分類、數量、購買日期、到期日期與備註
 - 部署環境可使用 PostgreSQL 儲存資料
@@ -37,7 +40,7 @@ v3 支援雲端 PostgreSQL。部署到 Streamlit Community Cloud 後，只要在
 
 ## Demo Screenshots
 
-以下截圖對應目前 v3 版本。v3 已接上 PostgreSQL，側邊欄會顯示目前資料庫模式。
+以下截圖對應目前 v3/v4 版本。v4 新增家庭邀請碼與成員管理基礎流程，主要食材管理畫面延續 v3。
 v1 / v2 截圖仍保留在 `assets/screenshots/`，方便回看專案演進。
 
 ### v3 PostgreSQL 資料保存
@@ -79,6 +82,8 @@ fridge-expiry-tracker/
 │   ├── food_manager.py
 │   └── utils.py
 ├── sample_data/
+│   ├── sample_families.csv
+│   ├── sample_family_members.csv
 │   └── sample_foods.csv
 └── assets/
     └── screenshots/
@@ -139,20 +144,21 @@ DATABASE_URL = "postgresql://username:password@host:5432/database?sslmode=requir
 
 請不要把真正的資料庫密碼提交到 GitHub。
 
-## 家庭代碼使用方式
+## 家庭邀請碼使用方式
 
-1. 在側邊欄輸入家庭代碼，例如 `murphy-home`。
-2. 輸入成員名稱，例如 `媽媽`、`爸爸`、`我`。
-3. 同一個家庭代碼會共用同一份食材清單。
-4. 不同家庭代碼會看到不同資料。
-5. 新增食材會記錄新增者。
-6. 標記已使用會記錄處理者。
+1. 在側邊欄選擇「建立家庭」。
+2. 輸入家庭代碼、家庭名稱、邀請碼與成員名稱。
+3. 家人之後可選擇「加入家庭」，輸入同一組家庭代碼與正確邀請碼。
+4. 同一個家庭的成員會共用同一份食材清單。
+5. 不同家庭代碼會看到不同資料。
+6. 新增食材會記錄新增者。
+7. 標記已使用會記錄處理者。
 
-這個版本沒有正式登入系統，家庭代碼主要用於家人測試與作品集展示，不適合拿來存放敏感資料。
+這個版本沒有正式登入系統，邀請碼主要用於家人測試與作品集展示，不適合拿來存放敏感資料。
 
 ## 資料欄位說明
 
-資料表名稱：`foods`
+主要資料表：`foods`
 
 | 欄位 | 型態 | 說明 |
 | --- | --- | --- |
@@ -169,6 +175,25 @@ DATABASE_URL = "postgresql://username:password@host:5432/database?sslmode=requir
 | used_by | TEXT | 標記已使用的成員名稱 |
 | used_at | TEXT | 標記已使用時間 |
 | created_at | TEXT | 建立時間 |
+
+家庭資料表：`families`
+
+| 欄位 | 型態 | 說明 |
+| --- | --- | --- |
+| id | INTEGER / SERIAL | 家庭流水號 |
+| family_code | TEXT | 家庭代碼，唯一 |
+| family_name | TEXT | 家庭顯示名稱 |
+| invite_code | TEXT | 加入家庭需要的邀請碼 |
+| created_at | TEXT | 建立時間 |
+
+家庭成員資料表：`family_members`
+
+| 欄位 | 型態 | 說明 |
+| --- | --- | --- |
+| id | INTEGER / SERIAL | 成員流水號 |
+| family_code | TEXT | 所屬家庭代碼 |
+| member_name | TEXT | 成員名稱 |
+| joined_at | TEXT | 加入時間 |
 
 ## 狀態標籤說明
 
@@ -198,6 +223,9 @@ expiry_date - today
 
 ## 已測試項目
 
+- 建立家庭
+- 使用邀請碼加入家庭
+- 家庭成員列表顯示
 - 家庭代碼篩選資料
 - 成員名稱記錄新增者
 - 標記已使用時記錄處理者
@@ -214,7 +242,7 @@ expiry_date - today
 
 ## 專案限制
 
-- v3 使用家庭代碼做簡單資料隔離，尚未加入正式登入或權限管理。
+- v4 使用家庭代碼與邀請碼做簡單資料隔離，尚未加入正式登入或權限管理。
 - v3 已支援 PostgreSQL，但目前尚未加入正式使用者帳號與權限控管。
 - 公開部署時，請不要輸入敏感或真實個資。
 - 日期需要手動輸入，尚未支援 OCR 辨識包裝日期。
@@ -229,7 +257,8 @@ expiry_date - today
 - [x] 家庭代碼共用冰箱
 - [x] 新增者 / 處理者記錄
 - [x] 雲端 PostgreSQL 資料庫
-- [ ] 家庭邀請碼與正式成員管理
+- [x] 家庭邀請碼與基礎成員管理
+- [ ] 正式登入與權限管理
 - [ ] LINE Messaging API 每日提醒
 - [ ] OCR 辨識食品包裝上的有效日期
 - [ ] 根據即將過期食材產生料理建議

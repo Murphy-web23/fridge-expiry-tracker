@@ -6,10 +6,14 @@ import streamlit as st
 from src.database import (
     add_food,
     configure_database,
+    create_family,
     delete_food,
     get_database_label,
     get_all_foods,
+    get_family,
+    get_family_members,
     init_db,
+    join_family,
     normalize_family_code,
     update_food_status,
 )
@@ -65,18 +69,34 @@ def display_text(value: object, fallback: str = "未記錄") -> str:
 
 
 def render_family_sidebar() -> tuple[str, str]:
-    # 家庭代碼存在 session_state，重新整理頁面時仍會回到預設值。
+    # 家庭設定存在 session_state，切換頁面時會保留目前家庭與成員。
     if "family_code" not in st.session_state:
         st.session_state.family_code = "demo-home"
+    if "family_name" not in st.session_state:
+        st.session_state.family_name = "示範家庭"
+    if "invite_code" not in st.session_state:
+        st.session_state.invite_code = "demo123"
     if "member_name" not in st.session_state:
         st.session_state.member_name = "訪客"
 
     with st.sidebar.form("family_profile_form"):
         st.subheader("家庭設定")
+        action = st.radio("操作", ["加入家庭", "建立家庭"], horizontal=True)
         family_code_input = st.text_input(
             "家庭代碼",
             value=st.session_state.family_code,
             help="同一個家庭代碼會共用同一份冰箱資料。",
+        )
+        family_name_input = st.text_input(
+            "家庭名稱",
+            value=st.session_state.family_name,
+            help="建立家庭時會儲存這個顯示名稱。",
+        )
+        invite_code_input = st.text_input(
+            "邀請碼",
+            value=st.session_state.invite_code,
+            type="password",
+            help="家人需要輸入正確邀請碼才能加入同一個家庭。",
         )
         member_name_input = st.text_input(
             "成員名稱",
@@ -86,15 +106,47 @@ def render_family_sidebar() -> tuple[str, str]:
         submitted = st.form_submit_button("套用")
 
     if submitted:
-        st.session_state.family_code = normalize_family_code(family_code_input)
-        st.session_state.member_name = member_name_input.strip() or "訪客"
-        st.rerun()
+        normalized_family_code = normalize_family_code(family_code_input)
+        member_name = member_name_input.strip() or "訪客"
+
+        try:
+            if action == "建立家庭":
+                family = create_family(
+                    family_code=normalized_family_code,
+                    family_name=family_name_input,
+                    invite_code=invite_code_input,
+                    member_name=member_name,
+                )
+                st.sidebar.success(f"已建立家庭：{family.get('family_name', normalized_family_code)}")
+            else:
+                family = join_family(
+                    family_code=normalized_family_code,
+                    invite_code=invite_code_input,
+                    member_name=member_name,
+                )
+                st.sidebar.success(f"已加入家庭：{family.get('family_name', normalized_family_code)}")
+
+            st.session_state.family_code = normalized_family_code
+            st.session_state.family_name = family.get("family_name", family_name_input)
+            st.session_state.invite_code = invite_code_input.strip()
+            st.session_state.member_name = member_name
+        except ValueError as error:
+            st.sidebar.error(str(error))
 
     family_code = normalize_family_code(st.session_state.family_code)
     member_name = st.session_state.member_name.strip() or "訪客"
+    family = get_family(family_code)
+    members = get_family_members(family_code) if family else []
+
     st.sidebar.caption(f"資料庫：{get_database_label()}")
+    if family:
+        st.sidebar.caption(f"目前家庭名稱：{family.get('family_name') or family_code}")
     st.sidebar.caption(f"目前家庭：`{family_code}`")
     st.sidebar.caption(f"目前成員：{member_name}")
+    if members:
+        member_names = "、".join(member["member_name"] for member in members)
+        st.sidebar.caption(f"家庭成員：{member_names}")
+
     return family_code, member_name
 
 
@@ -281,13 +333,15 @@ def render_about() -> None:
     st.title("關於專案")
     st.write(
         "這是一個使用 Python、Streamlit、SQLite 與 PostgreSQL 製作的食材期限管理工具。"
-        "v3 支援雲端資料庫，讓公開部署後的資料可以持久保存。"
+        "v4 加入家庭邀請碼與成員管理基礎流程，讓家人可以用邀請碼加入同一個家庭。"
     )
     st.write(f"目前資料庫模式：{get_database_label()}")
 
     st.subheader("目前功能")
     st.write("- Streamlit Secrets 設定 `DATABASE_URL` 後可使用 PostgreSQL")
     st.write("- 未設定 `DATABASE_URL` 時會使用本機 SQLite")
+    st.write("- 建立家庭、加入家庭與邀請碼檢查")
+    st.write("- 家庭成員列表顯示")
     st.write("- 家庭代碼共用冰箱資料")
     st.write("- 成員名稱記錄新增者與處理者")
     st.write("- 新增食材與到期日期")
@@ -311,7 +365,7 @@ def main() -> None:
         "選單",
         ["期限總覽", "新增食材", "食材清單", "關於專案"],
     )
-    st.sidebar.caption("v3 版本：支援家庭共用與雲端資料保存。")
+    st.sidebar.caption("v4 版本：支援家庭邀請碼與成員管理。")
 
     if page == "期限總覽":
         render_dashboard(foods_df, family_code)
