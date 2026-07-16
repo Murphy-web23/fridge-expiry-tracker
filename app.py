@@ -15,6 +15,7 @@ from src.database import (
     init_db,
     join_family,
     normalize_family_code,
+    update_food,
     update_food_status,
 )
 from src.food_manager import (
@@ -24,6 +25,7 @@ from src.food_manager import (
     get_dashboard_stats,
     sort_foods,
 )
+from src.utils import parse_date
 
 
 st.set_page_config(
@@ -34,7 +36,7 @@ st.set_page_config(
 
 
 def load_foods(family_code: str) -> pd.DataFrame:
-    """Read foods for one family and append calculated fields for the UI."""
+    """讀取指定家庭的食材，並補上剩餘天數與狀態標籤。"""
     records = get_all_foods(family_code)
     return enrich_food_records(records)
 
@@ -66,6 +68,50 @@ def display_text(value: object, fallback: str = "未記錄") -> str:
     if pd.isna(value) or not str(value).strip():
         return fallback
     return str(value)
+
+
+def get_date_input_value(value: object) -> date:
+    # date_input 需要 date 物件；舊資料若日期為空，就用今天當預設值。
+    if pd.isna(value) or not str(value).strip():
+        return date.today()
+    return parse_date(str(value))
+
+
+def render_food_table(df: pd.DataFrame) -> None:
+    display_df = df[
+        [
+            "name",
+            "category",
+            "quantity",
+            "expiry_date",
+            "days_left",
+            "status_label",
+            "added_by",
+            "updated_by",
+            "note",
+        ]
+    ].rename(
+        columns={
+            "name": "名稱",
+            "category": "分類",
+            "quantity": "數量",
+            "expiry_date": "到期日期",
+            "days_left": "剩餘天數",
+            "status_label": "狀態",
+            "added_by": "新增者",
+            "updated_by": "最後更新者",
+            "note": "備註",
+        }
+    )
+    st.dataframe(display_df, use_container_width=True, hide_index=True)
+
+
+def render_dashboard_section(title: str, df: pd.DataFrame, empty_message: str) -> None:
+    st.markdown(f"#### {title}")
+    if df.empty:
+        st.caption(empty_message)
+        return
+    render_food_table(sort_foods(df, "到期日由近到遠"))
 
 
 def render_family_sidebar() -> tuple[str, str]:
@@ -144,8 +190,11 @@ def render_family_sidebar() -> tuple[str, str]:
     st.sidebar.caption(f"目前家庭：`{family_code}`")
     st.sidebar.caption(f"目前成員：{member_name}")
     if members:
-        member_names = "、".join(member["member_name"] for member in members)
-        st.sidebar.caption(f"家庭成員：{member_names}")
+        st.sidebar.caption("家庭成員：")
+        for member in members:
+            joined_at = display_text(member.get("joined_at"), "")
+            joined_text = f"（{joined_at} 加入）" if joined_at else ""
+            st.sidebar.caption(f"- {member['member_name']}{joined_text}")
 
     return family_code, member_name
 
@@ -163,38 +212,22 @@ def render_dashboard(df: pd.DataFrame, family_code: str) -> None:
     col4.metric("已過期數", stats["expired"])
 
     st.divider()
-    st.subheader("最急需處理的食材")
     urgent_df = df[df["status"] == "active"] if not df.empty else df
-    urgent_df = sort_foods(urgent_df, "到期日由近到遠").head(8)
-
     if urgent_df.empty:
         st.success("目前沒有需要處理的 active 食材。")
         return
 
-    display_df = urgent_df[
-        [
-            "name",
-            "category",
-            "quantity",
-            "expiry_date",
-            "days_left",
-            "status_label",
-            "added_by",
-            "note",
-        ]
-    ].rename(
-        columns={
-            "name": "名稱",
-            "category": "分類",
-            "quantity": "數量",
-            "expiry_date": "到期日期",
-            "days_left": "剩餘天數",
-            "status_label": "狀態",
-            "added_by": "新增者",
-            "note": "備註",
-        }
-    )
-    st.dataframe(display_df, use_container_width=True, hide_index=True)
+    expired_df = urgent_df[urgent_df["days_left"] < 0]
+    today_df = urgent_df[urgent_df["days_left"] == 0]
+    soon_df = urgent_df[urgent_df["days_left"].between(1, 7)]
+
+    st.subheader("分區提醒")
+    render_dashboard_section("已過期", expired_df, "目前沒有已過期食材。")
+    render_dashboard_section("今天到期", today_df, "目前沒有今天到期食材。")
+    render_dashboard_section("7 天內到期", soon_df, "目前沒有 7 天內到期食材。")
+
+    st.subheader("最急需處理的食材")
+    render_food_table(sort_foods(urgent_df, "到期日由近到遠").head(8))
 
 
 def render_add_food_form(family_code: str, member_name: str) -> None:
@@ -265,6 +298,9 @@ def render_food_list(df: pd.DataFrame, family_code: str, member_name: str) -> No
                 st.write(f"分類：{row['category'] or '未分類'}")
                 st.write(f"數量：{row['quantity'] or '未填寫'}")
                 st.write(f"新增者：{display_text(row['added_by'])}")
+                updated_by = display_text(row["updated_by"], "")
+                if updated_by:
+                    st.write(f"最後更新者：{updated_by}")
                 used_by = display_text(row["used_by"], "")
                 if used_by:
                     st.write(f"處理者：{used_by}")
@@ -276,6 +312,8 @@ def render_food_list(df: pd.DataFrame, family_code: str, member_name: str) -> No
                 st.write(f"購買日期：{row['purchase_date'] or '未填寫'}")
                 st.write(f"到期日期：{row['expiry_date']}")
                 st.write(f"剩餘天數：{row['days_left']}")
+                if display_text(row["updated_at"], ""):
+                    st.write(f"最後更新：{row['updated_at']}")
                 st.markdown(render_status_badge(row["status_label"]), unsafe_allow_html=True)
 
             with col_actions:
@@ -297,6 +335,63 @@ def render_food_list(df: pd.DataFrame, family_code: str, member_name: str) -> No
                     st.warning(f"已刪除「{row['name']}」。")
                     st.rerun()
 
+            with st.expander("編輯食材"):
+                category_index = CATEGORIES.index(row["category"]) if row["category"] in CATEGORIES else 0
+                with st.form(f"edit_food_form_{row['id']}"):
+                    edit_name = st.text_input(
+                        "食材名稱",
+                        value=display_text(row["name"], ""),
+                        key=f"edit_name_{row['id']}",
+                    )
+                    edit_category = st.selectbox(
+                        "分類",
+                        CATEGORIES,
+                        index=category_index,
+                        key=f"edit_category_{row['id']}",
+                    )
+                    edit_quantity = st.text_input(
+                        "數量",
+                        value=display_text(row["quantity"], ""),
+                        key=f"edit_quantity_{row['id']}",
+                    )
+                    edit_col1, edit_col2 = st.columns(2)
+                    edit_purchase_date = edit_col1.date_input(
+                        "購買日期",
+                        value=get_date_input_value(row["purchase_date"]),
+                        key=f"edit_purchase_{row['id']}",
+                    )
+                    edit_expiry_date = edit_col2.date_input(
+                        "到期日期",
+                        value=get_date_input_value(row["expiry_date"]),
+                        key=f"edit_expiry_{row['id']}",
+                    )
+                    edit_note = st.text_area(
+                        "備註",
+                        value=display_text(row["note"], ""),
+                        key=f"edit_note_{row['id']}",
+                    )
+                    edit_submitted = st.form_submit_button("儲存修改")
+
+                if edit_submitted:
+                    if not edit_name.strip():
+                        st.error("請輸入食材名稱。")
+                    elif edit_expiry_date < edit_purchase_date:
+                        st.error("到期日期不能早於購買日期。")
+                    else:
+                        update_food(
+                            food_id=int(row["id"]),
+                            family_code=family_code,
+                            name=edit_name.strip(),
+                            category=edit_category,
+                            quantity=edit_quantity.strip(),
+                            purchase_date=edit_purchase_date.isoformat(),
+                            expiry_date=edit_expiry_date.isoformat(),
+                            note=edit_note.strip(),
+                            updated_by=member_name,
+                        )
+                        st.success(f"已更新「{edit_name.strip()}」。")
+                        st.rerun()
+
     st.divider()
     table_df = filtered_df[
         [
@@ -309,6 +404,8 @@ def render_food_list(df: pd.DataFrame, family_code: str, member_name: str) -> No
             "status_label",
             "added_by",
             "used_by",
+            "updated_by",
+            "updated_at",
             "note",
         ]
     ].rename(
@@ -322,6 +419,8 @@ def render_food_list(df: pd.DataFrame, family_code: str, member_name: str) -> No
             "status_label": "狀態標籤",
             "added_by": "新增者",
             "used_by": "處理者",
+            "updated_by": "最後更新者",
+            "updated_at": "最後更新時間",
             "note": "備註",
         }
     )
@@ -333,7 +432,7 @@ def render_about() -> None:
     st.title("關於專案")
     st.write(
         "這是一個使用 Python、Streamlit、SQLite 與 PostgreSQL 製作的食材期限管理工具。"
-        "v4 加入家庭邀請碼與成員管理基礎流程，讓家人可以用邀請碼加入同一個家庭。"
+        "v5 加入食材編輯、操作紀錄與 Dashboard 分區提醒，讓家庭共用時更容易追蹤變更。"
     )
     st.write(f"目前資料庫模式：{get_database_label()}")
 
@@ -345,8 +444,10 @@ def render_about() -> None:
     st.write("- 家庭代碼共用冰箱資料")
     st.write("- 成員名稱記錄新增者與處理者")
     st.write("- 新增食材與到期日期")
+    st.write("- 編輯既有食材資料")
+    st.write("- 記錄最後更新者與最後更新時間")
     st.write("- 自動計算剩餘天數與狀態標籤")
-    st.write("- 期限總覽統計與最急需處理清單")
+    st.write("- 期限總覽統計、分區提醒與最急需處理清單")
     st.write("- 食材篩選、排序、標記已使用與刪除")
 
     st.subheader("未加入的功能")
@@ -365,7 +466,7 @@ def main() -> None:
         "選單",
         ["期限總覽", "新增食材", "食材清單", "關於專案"],
     )
-    st.sidebar.caption("v4 版本：支援家庭邀請碼與成員管理。")
+    st.sidebar.caption("v5 版本：支援食材編輯、操作紀錄與分區提醒。")
 
     if page == "期限總覽":
         render_dashboard(foods_df, family_code)

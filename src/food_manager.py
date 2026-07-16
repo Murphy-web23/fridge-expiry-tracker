@@ -19,6 +19,7 @@ CATEGORIES = [
 
 
 def calculate_days_left(expiry_date: str, today: date | None = None) -> int:
+    # 期限狀態都以「今天」為基準計算，讓 Dashboard 和清單結果一致。
     today = today or date.today()
     parsed_expiry_date = parse_date(expiry_date)
     return (parsed_expiry_date - today).days
@@ -50,6 +51,8 @@ def enrich_food_records(records: list[dict]) -> pd.DataFrame:
         "added_by",
         "used_by",
         "used_at",
+        "updated_by",
+        "updated_at",
         "created_at",
     ]
     df = pd.DataFrame(records, columns=columns)
@@ -65,6 +68,7 @@ def enrich_food_records(records: list[dict]) -> pd.DataFrame:
 
 
 def get_dashboard_stats(df: pd.DataFrame) -> dict[str, int]:
+    # Dashboard 只統計尚未標記為已使用的 active 食材。
     active_df = df[df["status"] == "active"] if not df.empty else df
     if active_df.empty:
         return {

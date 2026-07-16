@@ -14,7 +14,7 @@ DATABASE_URL = os.getenv("DATABASE_URL", "").strip()
 
 
 def configure_database(database_url: str | None = None) -> None:
-    """Configure the database URL from Streamlit secrets or environment variables."""
+    """設定資料庫連線字串，Streamlit Cloud 會優先從 Secrets 傳入。"""
     global DATABASE_URL
     DATABASE_URL = (database_url or os.getenv("DATABASE_URL", "")).strip()
 
@@ -99,7 +99,7 @@ def _fetchone(conn, sql: str, params: tuple = ()):
 
 
 def init_db() -> None:
-    """Create or migrate the foods table for SQLite or PostgreSQL."""
+    """建立或更新資料表，讓舊版本資料庫也能自動補上新欄位。"""
     id_column = "SERIAL PRIMARY KEY" if use_postgres() else "INTEGER PRIMARY KEY AUTOINCREMENT"
 
     with closing(get_connection()) as conn:
@@ -120,6 +120,8 @@ def init_db() -> None:
                 added_by TEXT,
                 used_by TEXT,
                 used_at TEXT,
+                updated_by TEXT,
+                updated_at TEXT,
                 created_at TEXT
             )
             """,
@@ -158,6 +160,8 @@ def init_db() -> None:
         _add_column_if_missing(conn, "foods", existing_columns, "added_by", "TEXT")
         _add_column_if_missing(conn, "foods", existing_columns, "used_by", "TEXT")
         _add_column_if_missing(conn, "foods", existing_columns, "used_at", "TEXT")
+        _add_column_if_missing(conn, "foods", existing_columns, "updated_by", "TEXT")
+        _add_column_if_missing(conn, "foods", existing_columns, "updated_at", "TEXT")
 
         placeholder = _placeholder()
         _execute(
@@ -328,6 +332,53 @@ def get_family_members(family_code: str) -> list[dict]:
     return [dict(row) for row in rows]
 
 
+def update_food(
+    food_id: int,
+    family_code: str,
+    name: str,
+    category: str,
+    quantity: str,
+    purchase_date: str,
+    expiry_date: str,
+    note: str,
+    updated_by: str,
+) -> None:
+    """更新既有食材資料，並記錄最後修改者與修改時間。"""
+    updated_at = datetime.now().isoformat(timespec="seconds")
+    placeholder = _placeholder()
+
+    with closing(get_connection()) as conn:
+        _execute(
+            conn,
+            """
+            UPDATE foods
+            SET
+                name = {p},
+                category = {p},
+                quantity = {p},
+                purchase_date = {p},
+                expiry_date = {p},
+                note = {p},
+                updated_by = {p},
+                updated_at = {p}
+            WHERE id = {p} AND family_code = {p}
+            """.format(p=placeholder),
+            (
+                name,
+                category,
+                quantity,
+                purchase_date,
+                expiry_date,
+                note,
+                updated_by,
+                updated_at,
+                food_id,
+                normalize_family_code(family_code),
+            ),
+        )
+        conn.commit()
+
+
 def add_food(
     family_code: str,
     name: str,
@@ -377,7 +428,8 @@ def get_all_foods(family_code: str) -> list[dict]:
             """
             SELECT
                 id, family_code, name, category, quantity, purchase_date,
-                expiry_date, note, status, added_by, used_by, used_at, created_at
+                expiry_date, note, status, added_by, used_by, used_at,
+                updated_by, updated_at, created_at
             FROM foods
             WHERE family_code = {placeholder}
             ORDER BY expiry_date ASC
@@ -406,10 +458,18 @@ def update_food_status(
             conn,
             """
             UPDATE foods
-            SET status = {p}, used_by = {p}, used_at = {p}
+            SET status = {p}, used_by = {p}, used_at = {p}, updated_by = {p}, updated_at = {p}
             WHERE id = {p} AND family_code = {p}
             """.format(p=placeholder),
-            (status, normalized_used_by, used_at, food_id, normalized_family_code),
+            (
+                status,
+                normalized_used_by,
+                used_at,
+                normalized_used_by,
+                used_at,
+                food_id,
+                normalized_family_code,
+            ),
         )
         conn.commit()
 
