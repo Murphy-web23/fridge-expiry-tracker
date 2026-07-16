@@ -1,0 +1,7 @@
+v3 版本更新重點
+
+- 加入 PostgreSQL 支援，可在 Streamlit Cloud 使用雲端資料庫保存資料。
+- 保留 SQLite 作為本機開發 fallback。
+- 新增 Streamlit Secrets 設定範例。
+- 重新整理或重新部署後，雲端資料不會因暫存資料庫消失。
+- README 補充 PostgreSQL 部署與資料保存說明。

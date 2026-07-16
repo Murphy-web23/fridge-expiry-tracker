@@ -44,20 +44,24 @@ v5 加入食材編輯、操作紀錄與 Dashboard 分區提醒。使用者可以
 
 ## Demo Screenshots
 
-以下截圖對應 v4 版本主畫面。v5 延續相同介面方向，並在食材清單中補上編輯功能、最後更新紀錄與 Dashboard 分區提醒。
-v1 / v2 / v3 截圖仍保留在 `assets/screenshots/`，方便回看專案演進。
+以下截圖對應目前 v5 版本。v5 在家庭共用流程上加入食材編輯、最後更新紀錄與 Dashboard 分區提醒。
+v1 到 v4 截圖仍保留在 `assets/screenshots/`，各版本資料夾也有 `version_notes.txt` 記錄版本演進。
 
-### v4 期限總覽
+### v5 Dashboard 分區提醒
 
-![v4 期限總覽畫面](assets/screenshots/v4/overview.png)
+![v5 Dashboard 分區提醒畫面](assets/screenshots/v5/dashboard_sections.png)
 
-### v4 新增食材
+### v5 新增食材
 
-![v4 新增食材畫面](assets/screenshots/v4/add_food.png)
+![v5 新增食材畫面](assets/screenshots/v5/add_food.png)
 
-### v4 食材清單
+### v5 食材清單與編輯入口
 
-![v4 食材清單畫面](assets/screenshots/v4/food_list.png)
+![v5 食材清單與編輯入口畫面](assets/screenshots/v5/food_list_edit.png)
+
+### v5 表格檢視與操作紀錄
+
+![v5 表格檢視與操作紀錄畫面](assets/screenshots/v5/table_view.png)
 
 ## 使用技術
 
@@ -95,17 +99,27 @@ fridge-expiry-tracker/
         ├── v1/
         │   ├── add-food.png
         │   ├── food-list.png
-        │   └── overview.png
+        │   ├── overview.png
+        │   └── version_notes.txt
         ├── v2/
         │   ├── add_food.png
         │   ├── food_list.png
-        │   └── overview.png
+        │   ├── overview.png
+        │   └── version_notes.txt
         ├── v3/
-        │   └── postgres_overview.png
-        └── v4/
+        │   ├── postgres_overview.png
+        │   └── version_notes.txt
+        ├── v4/
+        │   ├── add_food.png
+        │   ├── food_list.png
+        │   ├── overview.png
+        │   └── version_notes.txt
+        └── v5/
             ├── add_food.png
-            ├── food_list.png
-            └── overview.png
+            ├── dashboard_sections.png
+            ├── food_list_edit.png
+            ├── table_view.png
+            └── version_notes.txt
 ```
 
 ## 安裝方式
