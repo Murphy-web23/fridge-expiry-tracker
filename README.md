@@ -40,20 +40,20 @@ v4 加入家庭邀請碼與成員管理基礎流程。使用者可以建立家�
 
 ## Demo Screenshots
 
-以下截圖對應目前 v3/v4 版本。v4 新增家庭邀請碼與成員管理基礎流程，主要食材管理畫面延續 v3。
-v1 / v2 截圖仍保留在 `assets/screenshots/`，方便回看專案演進。
+以下截圖對應目前 v4 版本。v4 新增家庭邀請碼與成員管理基礎流程，側邊欄可建立家庭、加入家庭、輸入邀請碼，並顯示目前使用的資料庫與家庭資訊。
+v1 / v2 / v3 截圖仍保留在 `assets/screenshots/`，方便回看專案演進。
 
-### v3 PostgreSQL 資料保存
+### v4 期限總覽
 
-![v3 PostgreSQL 期限總覽畫面](assets/screenshots/v3/postgres_overview.png)
+![v4 期限總覽畫面](assets/screenshots/v4/overview.png)
 
-### v2 新增食材流程
+### v4 新增食材
 
-![新增食材畫面](assets/screenshots/v2/add_food.png)
+![v4 新增食材畫面](assets/screenshots/v4/add_food.png)
 
-### v2 食材清單管理
+### v4 食材清單
 
-![食材清單畫面](assets/screenshots/v2/food_list.png)
+![v4 食材清單畫面](assets/screenshots/v4/food_list.png)
 
 ## 使用技術
 
@@ -96,8 +96,12 @@ fridge-expiry-tracker/
         │   ├── add_food.png
         │   ├── food_list.png
         │   └── overview.png
-        └── v3/
-            └── postgres_overview.png
+        ├── v3/
+        │   └── postgres_overview.png
+        └── v4/
+            ├── add_food.png
+            ├── food_list.png
+            └── overview.png
 ```
 
 ## 安裝方式
