@@ -46,12 +46,12 @@ v5.1 整理顯示文字、時間格式與作品集展示細節。使用者可以
 
 ## Demo Screenshots
 
-以下截圖對應目前 v5 版本。v5 在家庭共用流程上加入食材編輯、最後更新紀錄與 Dashboard 分區提醒。
-v1 到 v4 截圖仍保留在 `assets/screenshots/`，各版本資料夾也有 `version_notes.txt` 記錄版本演進。
+以下截圖對應目前 v5.1 版本。v5.1 在 v5 的家庭共用、食材編輯與操作紀錄基礎上，整理空值顯示與時間格式。
+v1 到 v5 截圖仍保留在 `assets/screenshots/`，各版本資料夾也有 `version_notes.txt` 記錄版本演進。
 
-### v5 Dashboard 分區提醒
+### v5.1 Dashboard 分區提醒
 
-![v5 Dashboard 分區提醒畫面](assets/screenshots/v5/dashboard_sections.png)
+![v5.1 Dashboard 分區提醒畫面](assets/screenshots/v5_1/dashboard_polished.png)
 
 ### v5 新增食材
 
@@ -127,11 +127,14 @@ fridge-expiry-tracker/
         │   ├── food_list.png
         │   ├── overview.png
         │   └── version_notes.txt
-        └── v5/
-            ├── add_food.png
-            ├── dashboard_sections.png
-            ├── food_list_edit.png
-            ├── table_view.png
+        ├── v5/
+        │   ├── add_food.png
+        │   ├── dashboard_sections.png
+        │   ├── food_list_edit.png
+        │   ├── table_view.png
+        │   └── version_notes.txt
+        └── v5_1/
+            ├── dashboard_polished.png
             └── version_notes.txt
 ```
 
