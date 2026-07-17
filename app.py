@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, datetime
 
 import pandas as pd
 import streamlit as st
@@ -26,6 +26,9 @@ from src.food_manager import (
     sort_foods,
 )
 from src.utils import parse_date
+
+
+EMPTY_TEXT = "未記錄"
 
 
 st.set_page_config(
@@ -64,10 +67,41 @@ def render_status_badge(status_label: str) -> str:
     )
 
 
-def display_text(value: object, fallback: str = "未記錄") -> str:
-    if pd.isna(value) or not str(value).strip():
+def display_text(value: object, fallback: str = EMPTY_TEXT) -> str:
+    if pd.isna(value):
         return fallback
-    return str(value)
+    text = str(value).strip()
+    if not text or text.lower() in {"none", "nan", "nat"}:
+        return fallback
+    return text
+
+
+def display_timestamp(value: object, fallback: str = EMPTY_TEXT) -> str:
+    # 資料庫存 ISO 格式，畫面顯示時轉成比較好讀的時間。
+    text = display_text(value, "")
+    if not text:
+        return fallback
+    try:
+        return datetime.fromisoformat(text).strftime("%Y-%m-%d %H:%M")
+    except ValueError:
+        return text.replace("T", " ")
+
+
+def prepare_display_dataframe(
+    df: pd.DataFrame,
+    columns: list[str],
+    rename_map: dict[str, str],
+) -> pd.DataFrame:
+    # Streamlit dataframe 會直接顯示 None，先整理成使用者看得懂的文字。
+    display_df = df[columns].rename(columns=rename_map).copy()
+    for column in display_df.columns:
+        if column == "剩餘天數":
+            continue
+        if "時間" in column or column in {"最後更新"}:
+            display_df[column] = display_df[column].apply(display_timestamp)
+        else:
+            display_df[column] = display_df[column].apply(display_text)
+    return display_df
 
 
 def get_date_input_value(value: object) -> date:
@@ -78,7 +112,8 @@ def get_date_input_value(value: object) -> date:
 
 
 def render_food_table(df: pd.DataFrame) -> None:
-    display_df = df[
+    display_df = prepare_display_dataframe(
+        df,
         [
             "name",
             "category",
@@ -89,9 +124,8 @@ def render_food_table(df: pd.DataFrame) -> None:
             "added_by",
             "updated_by",
             "note",
-        ]
-    ].rename(
-        columns={
+        ],
+        {
             "name": "名稱",
             "category": "分類",
             "quantity": "數量",
@@ -101,7 +135,7 @@ def render_food_table(df: pd.DataFrame) -> None:
             "added_by": "新增者",
             "updated_by": "最後更新者",
             "note": "備註",
-        }
+        },
     )
     st.dataframe(display_df, use_container_width=True, hide_index=True)
 
@@ -193,7 +227,7 @@ def render_family_sidebar() -> tuple[str, str]:
         st.sidebar.caption("家庭成員：")
         for member in members:
             joined_at = display_text(member.get("joined_at"), "")
-            joined_text = f"（{joined_at} 加入）" if joined_at else ""
+            joined_text = f"（{display_timestamp(joined_at)} 加入）" if joined_at else ""
             st.sidebar.caption(f"- {member['member_name']}{joined_text}")
 
     return family_code, member_name
@@ -214,7 +248,7 @@ def render_dashboard(df: pd.DataFrame, family_code: str) -> None:
     st.divider()
     urgent_df = df[df["status"] == "active"] if not df.empty else df
     if urgent_df.empty:
-        st.success("目前沒有需要處理的 active 食材。")
+        st.success("目前沒有需要優先處理的食材。")
         return
 
     expired_df = urgent_df[urgent_df["days_left"] < 0]
@@ -295,8 +329,8 @@ def render_food_list(df: pd.DataFrame, family_code: str, member_name: str) -> No
             col_info, col_dates, col_actions = st.columns([2.2, 1.6, 1])
             with col_info:
                 st.subheader(row["name"])
-                st.write(f"分類：{row['category'] or '未分類'}")
-                st.write(f"數量：{row['quantity'] or '未填寫'}")
+                st.write(f"分類：{display_text(row['category'], '未分類')}")
+                st.write(f"數量：{display_text(row['quantity'], '未填寫')}")
                 st.write(f"新增者：{display_text(row['added_by'])}")
                 updated_by = display_text(row["updated_by"], "")
                 if updated_by:
@@ -309,11 +343,11 @@ def render_food_list(df: pd.DataFrame, family_code: str, member_name: str) -> No
                     st.write(f"備註：{note}")
 
             with col_dates:
-                st.write(f"購買日期：{row['purchase_date'] or '未填寫'}")
-                st.write(f"到期日期：{row['expiry_date']}")
+                st.write(f"購買日期：{display_text(row['purchase_date'], '未填寫')}")
+                st.write(f"到期日期：{display_text(row['expiry_date'])}")
                 st.write(f"剩餘天數：{row['days_left']}")
                 if display_text(row["updated_at"], ""):
-                    st.write(f"最後更新：{row['updated_at']}")
+                    st.write(f"最後更新：{display_timestamp(row['updated_at'])}")
                 st.markdown(render_status_badge(row["status_label"]), unsafe_allow_html=True)
 
             with col_actions:
@@ -393,7 +427,8 @@ def render_food_list(df: pd.DataFrame, family_code: str, member_name: str) -> No
                         st.rerun()
 
     st.divider()
-    table_df = filtered_df[
+    table_df = prepare_display_dataframe(
+        filtered_df,
         [
             "name",
             "category",
@@ -407,9 +442,8 @@ def render_food_list(df: pd.DataFrame, family_code: str, member_name: str) -> No
             "updated_by",
             "updated_at",
             "note",
-        ]
-    ].rename(
-        columns={
+        ],
+        {
             "name": "名稱",
             "category": "分類",
             "quantity": "數量",
@@ -422,7 +456,7 @@ def render_food_list(df: pd.DataFrame, family_code: str, member_name: str) -> No
             "updated_by": "最後更新者",
             "updated_at": "最後更新時間",
             "note": "備註",
-        }
+        },
     )
     st.subheader("表格檢視")
     st.dataframe(table_df, use_container_width=True, hide_index=True)
@@ -432,7 +466,7 @@ def render_about() -> None:
     st.title("關於專案")
     st.write(
         "這是一個使用 Python、Streamlit、SQLite 與 PostgreSQL 製作的食材期限管理工具。"
-        "v5 加入食材編輯、操作紀錄與 Dashboard 分區提醒，讓家庭共用時更容易追蹤變更。"
+        "v5.1 整理顯示文字與時間格式，讓家庭共用時更接近正式產品體驗。"
     )
     st.write(f"目前資料庫模式：{get_database_label()}")
 
@@ -449,6 +483,7 @@ def render_about() -> None:
     st.write("- 自動計算剩餘天數與狀態標籤")
     st.write("- 期限總覽統計、分區提醒與最急需處理清單")
     st.write("- 食材篩選、排序、標記已使用與刪除")
+    st.write("- 空值顯示為「未記錄」，避免畫面出現工程用字")
 
     st.subheader("未加入的功能")
     st.write("正式登入、LINE 通知、OCR、AI 食譜推薦與 App 版本會先放在 Roadmap。")
@@ -466,7 +501,7 @@ def main() -> None:
         "選單",
         ["期限總覽", "新增食材", "食材清單", "關於專案"],
     )
-    st.sidebar.caption("v5 版本：支援食材編輯、操作紀錄與分區提醒。")
+    st.sidebar.caption("v5.1 版本：優化顯示文字、時間格式與作品集展示細節。")
 
     if page == "期限總覽":
         render_dashboard(foods_df, family_code)
