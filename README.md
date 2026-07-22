@@ -4,7 +4,7 @@ Repository name: `fridge-expiry-tracker`
 
 一個使用 Python、Streamlit、SQLite 與 PostgreSQL 製作的食材期限管理工具。使用者可以新增冰箱裡的食材、設定到期日期，系統會自動計算剩餘天數，並標示即將過期、今天到期、已過期與已使用的食材。
 
-v5.1 整理顯示文字、時間格式與作品集展示細節。使用者可以建立家庭、設定邀請碼，家人輸入正確邀請碼後即可加入同一個家庭並共用冰箱資料，也能追蹤食材最後由誰修改。
+v6 補上前端展示版與 API 資料契約規劃。使用者可以建立家庭、設定邀請碼，家人輸入正確邀請碼後即可加入同一個家庭並共用冰箱資料；後續規劃會延伸成 React / Next.js 前端與 FastAPI 後端。
 
 ## 專案動機
 
@@ -19,6 +19,7 @@ v5.1 整理顯示文字、時間格式與作品集展示細節。使用者可以
 - 使用家庭代碼建立簡單的多人共享資料模型
 - 使用邀請碼建立基礎加入流程，先不做正式登入
 - 使用編輯功能與操作紀錄補強 CRUD 流程
+- 將 Streamlit 原型整理成未來前後端分離專案的基礎規劃
 
 ## 功能特色
 
@@ -42,6 +43,7 @@ v5.1 整理顯示文字、時間格式與作品集展示細節。使用者可以
 - 支援標記已使用與刪除食材
 - 空值統一顯示為「未記錄」，避免畫面出現 `None`
 - 時間欄位轉成較好閱讀的格式
+- v6 補上前端展示版與 API 資料契約規劃
 - 繁體中文介面，適合作為初學者作品集專案
 
 ## Demo Screenshots
@@ -74,6 +76,21 @@ v1 到 v5 截圖仍保留在 `assets/screenshots/`，各版本資料夾也有 `v
 - PostgreSQL
 - psycopg2
 
+## v6 前端版規劃
+
+目前這個 repo 仍以 Streamlit 作為可執行的資料工具版本。v6 先補上未來前端產品版規劃，目標是讓專案之後可以自然延伸成：
+
+- React / Next.js 前端展示版
+- Tailwind CSS 視覺介面
+- FastAPI 後端 API
+- PostgreSQL 雲端資料庫
+- 家庭登入與權限管理
+
+相關文件：
+
+- [前端展示版規劃](docs/frontend_plan.md)
+- [API 與資料契約草案](docs/api_plan.md)
+
 ## 版本演進
 
 | 版本 | 更新重點 |
@@ -84,6 +101,7 @@ v1 到 v5 截圖仍保留在 `assets/screenshots/`，各版本資料夾也有 `v
 | v4 | 加入建立家庭、加入家庭、邀請碼與家庭成員清單 |
 | v5 | 加入食材編輯、最後更新者、最後更新時間與 Dashboard 分區提醒 |
 | v5.1 | 優化空值顯示、時間格式與 README 版本演進整理 |
+| v6 | 補上前端展示版規劃與 API 資料契約草案 |
 
 ## 專案架構
 
@@ -97,6 +115,9 @@ fridge-expiry-tracker/
 │   └── secrets.toml.example
 ├── data/
 │   └── .gitkeep
+├── docs/
+│   ├── api_plan.md
+│   └── frontend_plan.md
 ├── src/
 │   ├── __init__.py
 │   ├── database.py
@@ -133,8 +154,10 @@ fridge-expiry-tracker/
         │   ├── food_list_edit.png
         │   ├── table_view.png
         │   └── version_notes.txt
-        └── v5_1/
-            ├── dashboard_polished.png
+        ├── v5_1/
+        │   ├── dashboard_polished.png
+        │   └── version_notes.txt
+        └── v6/
             └── version_notes.txt
 ```
 
@@ -286,11 +309,12 @@ expiry_date - today
 
 ## 專案限制
 
-- v5.1 使用家庭代碼與邀請碼做簡單資料隔離，尚未加入正式登入或權限管理。
+- v6 目前仍使用家庭代碼與邀請碼做簡單資料隔離，尚未加入正式登入或權限管理。
 - v3 已支援 PostgreSQL，但目前尚未加入正式使用者帳號與權限控管。
 - 公開部署時，請不要輸入敏感或真實個資。
 - 日期需要手動輸入，尚未支援 OCR 辨識包裝日期。
 - 尚未加入通知功能，因此需要使用者主動開啟 App 查看。
+- 前端展示版與 API 目前是規劃文件，尚未正式實作。
 
 ## Roadmap
 
@@ -308,6 +332,10 @@ expiry_date - today
 - [x] 家庭成員資訊優化
 - [x] 空值與時間格式顯示優化
 - [x] README 版本演進整理
+- [x] 前端展示版規劃
+- [x] API 與資料契約草案
+- [ ] React / Next.js 前端展示版
+- [ ] FastAPI 前後端分離
 - [ ] 正式登入與權限管理
 - [ ] LINE Messaging API 每日提醒
 - [ ] OCR 辨識食品包裝上的有效日期
