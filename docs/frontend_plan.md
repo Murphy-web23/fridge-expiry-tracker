@@ -70,9 +70,9 @@ v6 先整理未來前端展示版的方向，讓目前的 Streamlit 工具可以
 
 ## 開發順序
 
-1. 建立 Next.js / React 前端專案骨架。
-2. 先使用 mock data 完成畫面。
-3. 補 Dashboard 與食材清單互動。
+1. 建立 Next.js / React 前端專案骨架。（v7 已先使用 React / Vite 完成展示版）
+2. 先使用 mock data 完成畫面。（v7 已完成）
+3. 補 Dashboard 與食材清單互動。（v7 已完成基礎互動）
 4. 接上 FastAPI 或 Streamlit 後端整理出的 API。
 5. 加入登入與家庭權限。
 6. 整理 README、截圖與 Demo 連結。

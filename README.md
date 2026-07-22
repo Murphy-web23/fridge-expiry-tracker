@@ -4,7 +4,7 @@ Repository name: `fridge-expiry-tracker`
 
 一個使用 Python、Streamlit、SQLite 與 PostgreSQL 製作的食材期限管理工具。使用者可以新增冰箱裡的食材、設定到期日期，系統會自動計算剩餘天數，並標示即將過期、今天到期、已過期與已使用的食材。
 
-v6 補上前端展示版與 API 資料契約規劃。使用者可以建立家庭、設定邀請碼，家人輸入正確邀請碼後即可加入同一個家庭並共用冰箱資料；後續規劃會延伸成 React / Next.js 前端與 FastAPI 後端。
+v7 新增 React / Vite 前端展示版。Streamlit 版本仍保留作為可操作的資料工具，前端展示版先使用 mock data 呈現更接近正式產品的介面。
 
 ## 專案動機
 
@@ -44,6 +44,7 @@ v6 補上前端展示版與 API 資料契約規劃。使用者可以建立家庭
 - 空值統一顯示為「未記錄」，避免畫面出現 `None`
 - 時間欄位轉成較好閱讀的格式
 - v6 補上前端展示版與 API 資料契約規劃
+- v7 新增 React / Vite 前端展示版，先以 mock data 展示產品介面
 - 繁體中文介面，適合作為初學者作品集專案
 
 ## Demo Screenshots
@@ -75,21 +76,35 @@ v1 到 v5 截圖仍保留在 `assets/screenshots/`，各版本資料夾也有 `v
 - SQLite `sqlite3`
 - PostgreSQL
 - psycopg2
+- React
+- Vite
+- CSS
 
-## v6 前端版規劃
+## v7 前端展示版
 
-目前這個 repo 仍以 Streamlit 作為可執行的資料工具版本。v6 先補上未來前端產品版規劃，目標是讓專案之後可以自然延伸成：
+目前這個 repo 仍以 Streamlit 作為可執行的資料工具版本。v7 新增 `frontend/`，先用 React / Vite 與 mock data 做出更漂亮的前端展示版。
 
-- React / Next.js 前端展示版
-- Tailwind CSS 視覺介面
-- FastAPI 後端 API
-- PostgreSQL 雲端資料庫
-- 家庭登入與權限管理
+前端展示版目前包含：
+
+- Dashboard 統計卡片
+- 已過期、今天到期與 7 天內到期分區提醒
+- 食材卡片
+- 搜尋、分類篩選與排序
+- 新增食材展示流程
+- 家庭管理展示頁
 
 相關文件：
 
 - [前端展示版規劃](docs/frontend_plan.md)
 - [API 與資料契約草案](docs/api_plan.md)
+
+前端展示版執行方式：
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
 
 ## 版本演進
 
@@ -102,6 +117,7 @@ v1 到 v5 截圖仍保留在 `assets/screenshots/`，各版本資料夾也有 `v
 | v5 | 加入食材編輯、最後更新者、最後更新時間與 Dashboard 分區提醒 |
 | v5.1 | 優化空值顯示、時間格式與 README 版本演進整理 |
 | v6 | 補上前端展示版規劃與 API 資料契約草案 |
+| v7 | 新增 React / Vite 前端展示版與 mock data 互動 |
 
 ## 專案架構
 
@@ -118,6 +134,14 @@ fridge-expiry-tracker/
 ├── docs/
 │   ├── api_plan.md
 │   └── frontend_plan.md
+├── frontend/
+│   ├── index.html
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── README.md
+│   └── src/
+│       ├── main.jsx
+│       └── styles.css
 ├── src/
 │   ├── __init__.py
 │   ├── database.py
@@ -157,7 +181,9 @@ fridge-expiry-tracker/
         ├── v5_1/
         │   ├── dashboard_polished.png
         │   └── version_notes.txt
-        └── v6/
+        ├── v6/
+        │   └── version_notes.txt
+        └── v7/
             └── version_notes.txt
 ```
 
@@ -169,7 +195,7 @@ fridge-expiry-tracker/
 pip install -r requirements.txt
 ```
 
-## 執行方式
+## Streamlit 執行方式
 
 在專案資料夾中執行：
 
@@ -184,6 +210,16 @@ data/fridge.db
 ```
 
 `data/fridge.db` 是本機開發資料，已加入 `.gitignore`，不會提交到 GitHub。
+
+## 前端展示版執行方式
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+v7 前端展示版目前使用 mock data，重新整理後會回到預設資料。後續版本會再接 FastAPI 與 PostgreSQL。
 
 ## Streamlit Cloud 資料庫設定
 
@@ -309,12 +345,12 @@ expiry_date - today
 
 ## 專案限制
 
-- v6 目前仍使用家庭代碼與邀請碼做簡單資料隔離，尚未加入正式登入或權限管理。
+- v7 的 Streamlit 版本仍使用家庭代碼與邀請碼做簡單資料隔離，尚未加入正式登入或權限管理。
 - v3 已支援 PostgreSQL，但目前尚未加入正式使用者帳號與權限控管。
 - 公開部署時，請不要輸入敏感或真實個資。
 - 日期需要手動輸入，尚未支援 OCR 辨識包裝日期。
 - 尚未加入通知功能，因此需要使用者主動開啟 App 查看。
-- 前端展示版與 API 目前是規劃文件，尚未正式實作。
+- v7 前端展示版目前使用 mock data，尚未連接 API 或資料庫。
 
 ## Roadmap
 
@@ -334,7 +370,7 @@ expiry_date - today
 - [x] README 版本演進整理
 - [x] 前端展示版規劃
 - [x] API 與資料契約草案
-- [ ] React / Next.js 前端展示版
+- [x] React / Vite 前端展示版
 - [ ] FastAPI 前後端分離
 - [ ] 正式登入與權限管理
 - [ ] LINE Messaging API 每日提醒

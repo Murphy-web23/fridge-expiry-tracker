@@ -1,0 +1,7 @@
+v7 版本更新重點
+
+- 新增 React / Vite 前端展示版，放在 frontend/ 資料夾。
+- 前端先使用 mock data，不直接連接 PostgreSQL 或 Streamlit 資料庫。
+- 完成 Dashboard 統計卡片、分區提醒、食材卡片與家庭管理展示頁。
+- 支援搜尋、分類篩選、排序與新增食材的前端互動。
+- 目標是先建立作品集主視覺，後續再接 FastAPI 與正式資料庫。

@@ -5,3 +5,6 @@ __pycache__/
 .streamlit/secrets.toml
 data/fridge.db
 .DS_Store
+node_modules/
+dist/
+*.log
