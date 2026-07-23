@@ -1,0 +1,8 @@
+v8 版本更新重點
+
+- 新增 FastAPI 後端雛形，放在 backend/ 資料夾。
+- 後端先使用 mock data，不直接連接 PostgreSQL。
+- 提供 /health、家庭資料、家庭成員、食材清單、新增食材、標記已使用等 API。
+- 補上 backend/README.md 與 backend/requirements.txt。
+- README 更新為 Streamlit 原型、React 前端展示版、FastAPI 後端雛形三層架構。
+- 面試與作品集說明重點另存於本機 private_notes/，不推上 GitHub。

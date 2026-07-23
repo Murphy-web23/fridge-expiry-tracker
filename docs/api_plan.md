@@ -1,10 +1,10 @@
-# v6 API 與資料契約草案
+# v8 API 與資料契約
 
 ## 目標
 
 目前 Streamlit 版本直接操作資料庫。未來若要做 React / Next.js 前端展示版，會需要一層 API 讓前端可以讀取與修改資料。
 
-v6 先整理 API 草案，之後可使用 FastAPI 實作。
+v8 已新增 FastAPI 後端雛形，先使用 mock data 驗證 API 路由與資料格式。後續版本再將 API 連接 PostgreSQL。
 
 ## 資料物件
 
@@ -57,14 +57,20 @@ v6 先整理 API 草案，之後可使用 FastAPI 實作。
 
 | Method | Path | 說明 |
 | --- | --- | --- |
+| GET | `/health` | 健康檢查 |
 | GET | `/families/{family_code}` | 取得家庭資料 |
-| POST | `/families` | 建立家庭 |
-| POST | `/families/{family_code}/join` | 使用邀請碼加入家庭 |
 | GET | `/families/{family_code}/members` | 取得家庭成員 |
 | GET | `/families/{family_code}/foods` | 取得家庭食材清單 |
 | POST | `/families/{family_code}/foods` | 新增食材 |
-| PATCH | `/families/{family_code}/foods/{food_id}` | 編輯食材 |
 | PATCH | `/families/{family_code}/foods/{food_id}/status` | 標記已使用或恢復 active |
+
+尚未實作但已規劃：
+
+| Method | Path | 說明 |
+| --- | --- | --- |
+| POST | `/families` | 建立家庭 |
+| POST | `/families/{family_code}/join` | 使用邀請碼加入家庭 |
+| PATCH | `/families/{family_code}/foods/{food_id}` | 編輯食材 |
 | DELETE | `/families/{family_code}/foods/{food_id}` | 刪除食材 |
 
 ## 權限雛形
@@ -79,7 +85,7 @@ v6 先規劃角色，不急著正式實作。
 
 ## 後續實作方向
 
-1. 新增 FastAPI 專案。
-2. 將目前 `src/database.py` 的資料庫操作整理成可重用 service。
-3. 前端先用 mock data，之後再接 API。
+1. 將目前 `src/database.py` 的資料庫操作整理成可重用 service。
+2. 將 FastAPI 後端接上 PostgreSQL。
+3. React 前端從 mock data 改為呼叫 API。
 4. 若要正式公開，需改用真正帳號登入與密碼雜湊。

@@ -4,7 +4,7 @@ Repository name: `fridge-expiry-tracker`
 
 一個使用 Python、Streamlit、SQLite 與 PostgreSQL 製作的食材期限管理工具。使用者可以新增冰箱裡的食材、設定到期日期，系統會自動計算剩餘天數，並標示即將過期、今天到期、已過期與已使用的食材。
 
-v7 新增 React / Vite 前端展示版。Streamlit 版本仍保留作為可操作的資料工具，前端展示版先使用 mock data 呈現更接近正式產品的介面。
+v8 新增 FastAPI 後端雛形。Streamlit 版本仍保留作為可操作的資料工具，React 前端展示版負責產品介面，FastAPI 後端先使用 mock data 驗證 API 路由。
 
 ## 專案動機
 
@@ -45,6 +45,7 @@ v7 新增 React / Vite 前端展示版。Streamlit 版本仍保留作為可操�
 - 時間欄位轉成較好閱讀的格式
 - v6 補上前端展示版與 API 資料契約規劃
 - v7 新增 React / Vite 前端展示版，先以 mock data 展示產品介面
+- v8 新增 FastAPI 後端雛形，讓前端後續可以逐步接 API
 - 繁體中文介面，適合作為初學者作品集專案
 
 ## Demo Screenshots
@@ -83,6 +84,18 @@ v1 到 v6 截圖仍保留在 `assets/screenshots/`，各版本資料夾也有 `v
 - React
 - Vite
 - CSS
+- FastAPI
+- Uvicorn
+
+## v8 專案架構定位
+
+目前專案分成三個層次：
+
+- `app.py`：Streamlit 可操作資料工具版，負責驗證資料流程與 PostgreSQL 保存。
+- `frontend/`：React / Vite 前端展示版，先用 mock data 呈現更漂亮的產品介面。
+- `backend/`：FastAPI 後端雛形，先用 mock data 提供 API 路由，後續再接 PostgreSQL。
+
+v8 的重點不是取代 Streamlit，而是開始補上前後端分離需要的 API 層。
 
 ## v7 前端展示版
 
@@ -122,6 +135,7 @@ npm run dev
 | v5.1 | 優化空值顯示、時間格式與 README 版本演進整理 |
 | v6 | 補上前端展示版規劃與 API 資料契約草案 |
 | v7 | 新增 React / Vite 前端展示版與 mock data 互動 |
+| v8 | 新增 FastAPI 後端雛形與 mock API |
 
 ## 專案架構
 
@@ -133,6 +147,14 @@ fridge-expiry-tracker/
 ├── .gitignore
 ├── .streamlit/
 │   └── secrets.toml.example
+├── backend/
+│   ├── README.md
+│   ├── requirements.txt
+│   └── app/
+│       ├── __init__.py
+│       ├── main.py
+│       ├── mock_data.py
+│       └── models.py
 ├── data/
 │   └── .gitkeep
 ├── docs/
@@ -187,12 +209,14 @@ fridge-expiry-tracker/
         │   └── version_notes.txt
         ├── v6/
         │   └── version_notes.txt
-        └── v7/
-            ├── add_food.png
-            ├── dashboard_sections.png
-            ├── dashboard_top.png
-            ├── family_management.png
-            ├── food_list.png
+        ├── v7/
+        │   ├── add_food.png
+        │   ├── dashboard_sections.png
+        │   ├── dashboard_top.png
+        │   ├── family_management.png
+        │   ├── food_list.png
+        │   └── version_notes.txt
+        └── v8/
             └── version_notes.txt
 ```
 
@@ -229,6 +253,22 @@ npm run dev
 ```
 
 v7 前端展示版目前使用 mock data，重新整理後會回到預設資料。後續版本會再接 FastAPI 與 PostgreSQL。
+
+## FastAPI 後端執行方式
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload
+```
+
+啟動後可開啟：
+
+```text
+http://127.0.0.1:8000/docs
+```
+
+v8 後端目前使用 mock data，重啟服務後會回到預設資料。後續版本會再接 PostgreSQL。
 
 ## Streamlit Cloud 資料庫設定
 
@@ -354,12 +394,13 @@ expiry_date - today
 
 ## 專案限制
 
-- v7 的 Streamlit 版本仍使用家庭代碼與邀請碼做簡單資料隔離，尚未加入正式登入或權限管理。
+- v8 的 Streamlit 版本仍使用家庭代碼與邀請碼做簡單資料隔離，尚未加入正式登入或權限管理。
 - v3 已支援 PostgreSQL，但目前尚未加入正式使用者帳號與權限控管。
 - 公開部署時，請不要輸入敏感或真實個資。
 - 日期需要手動輸入，尚未支援 OCR 辨識包裝日期。
 - 尚未加入通知功能，因此需要使用者主動開啟 App 查看。
 - v7 前端展示版目前使用 mock data，尚未連接 API 或資料庫。
+- v8 FastAPI 後端目前也使用 mock data，尚未連接 PostgreSQL。
 
 ## Roadmap
 
@@ -380,7 +421,9 @@ expiry_date - today
 - [x] 前端展示版規劃
 - [x] API 與資料契約草案
 - [x] React / Vite 前端展示版
-- [ ] FastAPI 前後端分離
+- [x] FastAPI 後端雛形
+- [ ] React 前端串接 FastAPI
+- [ ] FastAPI 串接 PostgreSQL
 - [ ] 正式登入與權限管理
 - [ ] LINE Messaging API 每日提醒
 - [ ] OCR 辨識食品包裝上的有效日期
