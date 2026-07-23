@@ -49,24 +49,28 @@ v7 新增 React / Vite 前端展示版。Streamlit 版本仍保留作為可操�
 
 ## Demo Screenshots
 
-以下截圖對應目前 v5.1 版本。v5.1 在 v5 的家庭共用、食材編輯與操作紀錄基礎上，整理空值顯示與時間格式。
-v1 到 v5 截圖仍保留在 `assets/screenshots/`，各版本資料夾也有 `version_notes.txt` 記錄版本演進。
+以下截圖對應目前 v7 前端展示版。v7 使用 React / Vite 與 mock data 呈現更接近正式產品的操作介面，瀏覽與切換頁面比 Streamlit 原型更流暢。
+v1 到 v6 截圖仍保留在 `assets/screenshots/`，各版本資料夾也有 `version_notes.txt` 記錄版本演進。
 
-### v5.1 Dashboard 分區提醒
+### v7 Dashboard 統計
 
-![v5.1 Dashboard 分區提醒畫面](assets/screenshots/v5_1/dashboard_polished.png)
+![v7 Dashboard 統計畫面](assets/screenshots/v7/dashboard_top.png)
 
-### v5 新增食材
+### v7 Dashboard 分區提醒
 
-![v5 新增食材畫面](assets/screenshots/v5/add_food.png)
+![v7 Dashboard 分區提醒畫面](assets/screenshots/v7/dashboard_sections.png)
 
-### v5 食材清單與編輯入口
+### v7 食材清單
 
-![v5 食材清單與編輯入口畫面](assets/screenshots/v5/food_list_edit.png)
+![v7 食材清單畫面](assets/screenshots/v7/food_list.png)
 
-### v5 表格檢視與操作紀錄
+### v7 新增食材
 
-![v5 表格檢視與操作紀錄畫面](assets/screenshots/v5/table_view.png)
+![v7 新增食材畫面](assets/screenshots/v7/add_food.png)
+
+### v7 家庭管理
+
+![v7 家庭管理畫面](assets/screenshots/v7/family_management.png)
 
 ## 使用技術
 
@@ -184,6 +188,11 @@ fridge-expiry-tracker/
         ├── v6/
         │   └── version_notes.txt
         └── v7/
+            ├── add_food.png
+            ├── dashboard_sections.png
+            ├── dashboard_top.png
+            ├── family_management.png
+            ├── food_list.png
             └── version_notes.txt
 ```
 
