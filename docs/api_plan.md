@@ -1,10 +1,10 @@
-# v8 API 與資料契約
+# v9 API 與資料契約
 
 ## 目標
 
 目前 Streamlit 版本直接操作資料庫。未來若要做 React / Next.js 前端展示版，會需要一層 API 讓前端可以讀取與修改資料。
 
-v8 已新增 FastAPI 後端雛形，先使用 mock data 驗證 API 路由與資料格式。後續版本再將 API 連接 PostgreSQL。
+v8 已新增 FastAPI 後端雛形，先使用 mock data 驗證 API 路由與資料格式。v9 開始讓 React 前端串接 FastAPI，完成讀取家庭資料、讀取食材清單、新增食材與標記已使用的前後端資料流。後續版本再將 API 連接 PostgreSQL。
 
 ## 資料物件
 
@@ -53,7 +53,7 @@ v8 已新增 FastAPI 後端雛形，先使用 mock data 驗證 API 路由與資�
 }
 ```
 
-## API 草案
+## 已實作 API
 
 | Method | Path | 說明 |
 | --- | --- | --- |
@@ -87,5 +87,5 @@ v6 先規劃角色，不急著正式實作。
 
 1. 將目前 `src/database.py` 的資料庫操作整理成可重用 service。
 2. 將 FastAPI 後端接上 PostgreSQL。
-3. React 前端從 mock data 改為呼叫 API。
+3. 補上編輯與刪除食材 API。
 4. 若要正式公開，需改用真正帳號登入與密碼雜湊。

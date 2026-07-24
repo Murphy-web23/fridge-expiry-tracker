@@ -1,94 +1,91 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
+import {
+  apiConfig,
+  createFood,
+  getFamily,
+  getFoods,
+  getMembers,
+  markFoodUsed,
+} from "./api";
 import "./styles.css";
 
 const categories = ["全部", "蔬菜", "水果", "肉類", "海鮮", "乳製品", "冷凍食品", "飲料", "調味料", "其他"];
-
-const initialFoods = [
-  {
-    id: 1,
-    name: "牛奶",
-    category: "乳製品",
-    quantity: "一瓶",
-    expiryDate: "2026-07-11",
-    daysLeft: -6,
-    status: "Expired",
-    addedBy: "Murphy",
-    updatedBy: "未記錄",
-    note: "未開封",
-  },
-  {
-    id: 2,
-    name: "雞蛋",
-    category: "其他",
-    quantity: "一盒",
-    expiryDate: "2026-07-17",
-    daysLeft: 0,
-    status: "Today",
-    addedBy: "Murphy",
-    updatedBy: "未記錄",
-    note: "已開封",
-  },
-  {
-    id: 3,
-    name: "雞胸肉",
-    category: "肉類",
-    quantity: "3包",
-    expiryDate: "2026-07-22",
-    daysLeft: 5,
-    status: "Soon",
-    addedBy: "NICK",
-    updatedBy: "未記錄",
-    note: "冷藏未開封",
-  },
-  {
-    id: 4,
-    name: "青江菜",
-    category: "蔬菜",
-    quantity: "2把",
-    expiryDate: "2026-07-28",
-    daysLeft: 11,
-    status: "Safe",
-    addedBy: "家人",
-    updatedBy: "未記錄",
-    note: "放蔬果盒",
-  },
-];
 
 const statusText = {
   Expired: "已過期",
   Today: "今天到期",
   Soon: "即將到期",
   Safe: "安全",
+  Used: "已使用",
 };
 
-function getStatus(daysLeft) {
-  if (daysLeft < 0) return "Expired";
-  if (daysLeft === 0) return "Today";
-  if (daysLeft <= 7) return "Soon";
-  return "Safe";
+function todayText() {
+  return new Date().toISOString().slice(0, 10);
+}
+
+function normalizeFood(food) {
+  return {
+    id: food.id,
+    name: food.name,
+    category: food.category,
+    quantity: food.quantity,
+    purchaseDate: food.purchase_date,
+    expiryDate: food.expiry_date,
+    daysLeft: food.days_left,
+    status: food.status_label,
+    addedBy: food.added_by,
+    updatedBy: food.updated_by || "未記錄",
+    note: food.note || "未記錄",
+  };
 }
 
 function App() {
   const [activePage, setActivePage] = useState("dashboard");
-  const [foods, setFoods] = useState(initialFoods);
+  const [foods, setFoods] = useState([]);
+  const [family, setFamily] = useState(null);
+  const [members, setMembers] = useState([]);
   const [filter, setFilter] = useState("全部");
   const [sortMode, setSortMode] = useState("urgent");
   const [search, setSearch] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
   const [form, setForm] = useState({
     name: "",
     category: "蔬菜",
     quantity: "",
-    expiryDate: "2026-07-24",
+    purchaseDate: todayText(),
+    expiryDate: todayText(),
     note: "",
   });
 
+  useEffect(() => {
+    loadInitialData();
+  }, []);
+
+  async function loadInitialData() {
+    try {
+      setIsLoading(true);
+      setErrorMessage("");
+      const [familyData, memberData, foodData] = await Promise.all([getFamily(), getMembers(), getFoods()]);
+      setFamily(familyData);
+      setMembers(memberData);
+      setFoods(foodData.map(normalizeFood));
+    } catch (error) {
+      setErrorMessage("目前無法連線到 FastAPI，請先啟動後端服務。");
+    } finally {
+      setIsLoading(false);
+    }
+  }
+
   const stats = useMemo(() => {
+    const activeFoods = foods.filter((food) => food.status !== "Used");
     return {
-      total: foods.length,
-      expired: foods.filter((food) => food.daysLeft < 0).length,
-      today: foods.filter((food) => food.daysLeft === 0).length,
-      soon: foods.filter((food) => food.daysLeft > 0 && food.daysLeft <= 7).length,
+      total: activeFoods.length,
+      expired: activeFoods.filter((food) => food.daysLeft < 0).length,
+      today: activeFoods.filter((food) => food.daysLeft === 0).length,
+      soon: activeFoods.filter((food) => food.daysLeft > 0 && food.daysLeft <= 7).length,
     };
   }, [foods]);
 
@@ -106,32 +103,51 @@ function App() {
     });
   }, [foods, filter, search, sortMode]);
 
-  const addFood = (event) => {
+  async function addFood(event) {
     event.preventDefault();
     if (!form.name.trim()) return;
 
-    const daysLeft = Math.max(-3, Math.ceil((new Date(form.expiryDate) - new Date("2026-07-17")) / 86400000));
-    const nextFood = {
-      id: Date.now(),
-      name: form.name.trim(),
-      category: form.category,
-      quantity: form.quantity || "未記錄",
-      expiryDate: form.expiryDate,
-      daysLeft,
-      status: getStatus(daysLeft),
-      addedBy: "訪客",
-      updatedBy: "未記錄",
-      note: form.note || "未記錄",
-    };
+    try {
+      setIsSaving(true);
+      setErrorMessage("");
+      const createdFood = await createFood({
+        name: form.name.trim(),
+        category: form.category,
+        quantity: form.quantity || "未記錄",
+        purchase_date: form.purchaseDate,
+        expiry_date: form.expiryDate,
+        note: form.note || "未記錄",
+      });
 
-    setFoods((current) => [nextFood, ...current]);
-    setForm({ name: "", category: "蔬菜", quantity: "", expiryDate: "2026-07-24", note: "" });
-    setActivePage("foods");
-  };
+      setFoods((current) => [normalizeFood(createdFood), ...current]);
+      setForm({
+        name: "",
+        category: "蔬菜",
+        quantity: "",
+        purchaseDate: todayText(),
+        expiryDate: todayText(),
+        note: "",
+      });
+      setActivePage("foods");
+    } catch (error) {
+      setErrorMessage("新增失敗，請確認 FastAPI 後端是否正在執行。");
+    } finally {
+      setIsSaving(false);
+    }
+  }
 
-  const markUsed = (id) => {
-    setFoods((current) => current.filter((food) => food.id !== id));
-  };
+  async function markUsed(id) {
+    try {
+      setErrorMessage("");
+      const updatedFood = await markFoodUsed(id);
+      setFoods((current) => current.map((food) => (food.id === id ? normalizeFood(updatedFood) : food)));
+    } catch (error) {
+      setErrorMessage("標記已使用失敗，請稍後再試。");
+    }
+  }
+
+  const familyName = family?.family_name || "示範家庭";
+  const memberNames = members.map((member) => member.member_name).join("、") || "尚未載入";
 
   return (
     <div className="app-shell">
@@ -144,7 +160,7 @@ function App() {
           </div>
         </div>
 
-        <nav className="nav-list" aria-label="主要功能">
+        <nav className="nav-list" aria-label="主要選單">
           <button className={activePage === "dashboard" ? "active" : ""} onClick={() => setActivePage("dashboard")}>
             期限總覽
           </button>
@@ -161,20 +177,24 @@ function App() {
 
         <section className="family-card">
           <p className="eyebrow">目前家庭</p>
-          <h2>示範家庭</h2>
-          <p>成員：Murphy、NICK、訪客</p>
-          <span>資料來源：Mock Data</span>
+          <h2>{familyName}</h2>
+          <p>成員：{memberNames}</p>
+          <span>資料來源：FastAPI</span>
         </section>
       </aside>
 
       <main className="main-content">
         <header className="topbar">
           <div>
-            <p className="eyebrow">v7 前端展示版</p>
+            <p className="eyebrow">v9 前後端串接版</p>
             <h2>{activePage === "dashboard" ? "家庭冰箱 Dashboard" : pageTitle(activePage)}</h2>
           </div>
-          <button className="primary-action" onClick={() => setActivePage("add")}>新增食材</button>
+          <button className="primary-action" onClick={() => setActivePage("add")}>
+            新增食材
+          </button>
         </header>
+
+        <ApiNotice isLoading={isLoading} errorMessage={errorMessage} onRetry={loadInitialData} />
 
         {activePage === "dashboard" && <Dashboard stats={stats} foods={foods} onMarkUsed={markUsed} />}
         {activePage === "foods" && (
@@ -189,8 +209,10 @@ function App() {
             onMarkUsed={markUsed}
           />
         )}
-        {activePage === "add" && <AddFoodForm form={form} setForm={setForm} onSubmit={addFood} />}
-        {activePage === "family" && <FamilyPanel />}
+        {activePage === "add" && (
+          <AddFoodForm form={form} setForm={setForm} onSubmit={addFood} isSaving={isSaving} familyName={familyName} />
+        )}
+        {activePage === "family" && <FamilyPanel family={family} members={members} />}
       </main>
     </div>
   );
@@ -202,10 +224,28 @@ function pageTitle(page) {
   return "家庭管理";
 }
 
+function ApiNotice({ isLoading, errorMessage, onRetry }) {
+  if (isLoading) {
+    return <div className="api-notice">正在從 FastAPI 載入家庭冰箱資料...</div>;
+  }
+
+  if (errorMessage) {
+    return (
+      <div className="api-notice error">
+        <span>{errorMessage}</span>
+        <button onClick={onRetry}>重新載入</button>
+      </div>
+    );
+  }
+
+  return <div className="api-notice success">已連線：{apiConfig.apiBaseUrl}</div>;
+}
+
 function Dashboard({ stats, foods, onMarkUsed }) {
-  const expired = foods.filter((food) => food.daysLeft < 0);
-  const today = foods.filter((food) => food.daysLeft === 0);
-  const soon = foods.filter((food) => food.daysLeft > 0 && food.daysLeft <= 7);
+  const activeFoods = foods.filter((food) => food.status !== "Used");
+  const expired = activeFoods.filter((food) => food.daysLeft < 0);
+  const today = activeFoods.filter((food) => food.daysLeft === 0);
+  const soon = activeFoods.filter((food) => food.daysLeft > 0 && food.daysLeft <= 7);
 
   return (
     <div className="page-grid">
@@ -221,12 +261,12 @@ function Dashboard({ stats, foods, onMarkUsed }) {
           <p className="eyebrow">需要優先處理</p>
           <h3>把最緊急的食材排在前面</h3>
         </div>
-        <p>這裡使用 mock data 展示未來前端版的資訊密度與卡片排版。</p>
+        <p>v9 會從 FastAPI 讀取資料，新增與標記已使用也會透過 API 更新後端狀態。</p>
       </section>
 
       <FoodSection title="已過期" foods={expired} emptyText="目前沒有已過期食材。" onMarkUsed={onMarkUsed} />
-      <FoodSection title="今天到期" foods={today} emptyText="今天沒有到期食材。" onMarkUsed={onMarkUsed} />
-      <FoodSection title="7 天內到期" foods={soon} emptyText="7 天內沒有到期食材。" onMarkUsed={onMarkUsed} />
+      <FoodSection title="今天到期" foods={today} emptyText="目前沒有今天到期食材。" onMarkUsed={onMarkUsed} />
+      <FoodSection title="7 天內到期" foods={soon} emptyText="目前沒有 7 天內到期食材。" onMarkUsed={onMarkUsed} />
     </div>
   );
 }
@@ -301,7 +341,9 @@ function FoodCard({ food, onMarkUsed }) {
       <div className="food-card-header">
         <div>
           <h4>{food.name}</h4>
-          <p>{food.category} · {food.quantity}</p>
+          <p>
+            {food.category} ・ {food.quantity}
+          </p>
         </div>
         <span className={`status-badge ${food.status.toLowerCase()}`}>{statusText[food.status]}</span>
       </div>
@@ -323,20 +365,28 @@ function FoodCard({ food, onMarkUsed }) {
           <dd>{food.note}</dd>
         </div>
       </dl>
-      <button className="ghost-action" onClick={() => onMarkUsed(food.id)}>標記已使用</button>
+      {food.status === "Used" ? (
+        <button className="ghost-action" disabled>
+          已標記使用
+        </button>
+      ) : (
+        <button className="ghost-action" onClick={() => onMarkUsed(food.id)}>
+          標記已使用
+        </button>
+      )}
     </article>
   );
 }
 
-function AddFoodForm({ form, setForm, onSubmit }) {
+function AddFoodForm({ form, setForm, onSubmit, isSaving, familyName }) {
   const updateForm = (field, value) => setForm((current) => ({ ...current, [field]: value }));
 
   return (
     <section className="form-panel">
       <div>
-        <p className="eyebrow">新增到示範家庭</p>
+        <p className="eyebrow">新增到 {familyName}</p>
         <h3>新增食材</h3>
-        <p>這個前端展示版先使用 mock data，未來會接上 API 與 PostgreSQL。</p>
+        <p>v9 表單會呼叫 FastAPI POST API，新增成功後回到食材清單。</p>
       </div>
       <form onSubmit={onSubmit} className="food-form">
         <label>
@@ -353,7 +403,11 @@ function AddFoodForm({ form, setForm, onSubmit }) {
         </label>
         <label>
           數量
-          <input value={form.quantity} onChange={(event) => updateForm("quantity", event.target.value)} placeholder="例如：2盒" />
+          <input value={form.quantity} onChange={(event) => updateForm("quantity", event.target.value)} placeholder="例如：2 盒" />
+        </label>
+        <label>
+          購買日期
+          <input type="date" value={form.purchaseDate} onChange={(event) => updateForm("purchaseDate", event.target.value)} />
         </label>
         <label>
           到期日期
@@ -363,24 +417,28 @@ function AddFoodForm({ form, setForm, onSubmit }) {
           備註
           <textarea value={form.note} onChange={(event) => updateForm("note", event.target.value)} placeholder="例如：已開封、冷藏未開封" />
         </label>
-        <button className="primary-action full" type="submit">加入展示清單</button>
+        <button className="primary-action full" type="submit" disabled={isSaving}>
+          {isSaving ? "新增中..." : "加入冰箱"}
+        </button>
       </form>
     </section>
   );
 }
 
-function FamilyPanel() {
+function FamilyPanel({ family, members }) {
   return (
     <section className="panel family-page">
       <div>
         <p className="eyebrow">家庭管理</p>
-        <h3>示範家庭</h3>
-        <p>v7 先展示未來家庭管理介面，正式登入與權限會在後續版本規劃。</p>
+        <h3>{family?.family_name || "示範家庭"}</h3>
+        <p>v9 會從 FastAPI 讀取家庭與成員資料，後續可再補上正式登入、角色權限與邀請流程。</p>
       </div>
       <div className="member-grid">
-        {["Murphy · 管理員", "NICK · 成員", "訪客 · 成員"].map((member) => (
-          <article key={member} className="member-card">
-            <strong>{member}</strong>
+        {members.map((member) => (
+          <article key={member.member_name} className="member-card">
+            <strong>
+              {member.member_name} ・ {member.role}
+            </strong>
             <span>已加入家庭冰箱</span>
           </article>
         ))}

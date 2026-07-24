@@ -7,13 +7,16 @@ from app.models import FamilyResponse, FoodCreate, FoodResponse, FoodStatusUpdat
 
 app = FastAPI(
     title="食材期限管理工具 API",
-    description="v8 FastAPI 後端雛形，先使用 mock data 提供前端串接練習。",
-    version="0.1.0",
+    description="v9 FastAPI 雛形，提供 React 前端展示版串接使用。",
+    version="0.2.0",
 )
 
+# v9 先允許本機 Vite 常用 port，方便前端開發時直接呼叫 API。
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
         "http://localhost:5177",
         "http://127.0.0.1:5177",
     ],
@@ -25,7 +28,7 @@ app.add_middleware(
 
 @app.get("/health")
 def health_check() -> dict[str, str]:
-    return {"status": "ok", "version": "v8"}
+    return {"status": "ok", "version": "v9"}
 
 
 @app.get("/families/{family_code}", response_model=FamilyResponse)

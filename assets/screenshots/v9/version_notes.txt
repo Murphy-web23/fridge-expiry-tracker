@@ -1,0 +1,16 @@
+v9 前後端串接版
+
+更新重點：
+- React 前端從純 mock data 改為呼叫 FastAPI。
+- 新增 API helper，統一管理 API base URL 與請求格式。
+- Dashboard、食材清單與家庭管理會從後端取得資料。
+- 新增食材會呼叫 POST API。
+- 標記已使用會呼叫 PATCH API。
+- 前端加入載入中、連線成功與錯誤提示。
+- 後端 CORS 補上 Vite 預設開發 port。
+- 後端健康檢查版本更新為 v9。
+
+說明：
+- v9 先完成 React 與 FastAPI 的資料流。
+- FastAPI 仍使用記憶體 mock data，重啟服務後會回到預設資料。
+- 下一步適合將 FastAPI 接上 PostgreSQL，讓 React 前端資料可以永久保存。

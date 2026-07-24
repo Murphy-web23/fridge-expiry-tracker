@@ -2,9 +2,9 @@
 
 Repository name: `fridge-expiry-tracker`
 
-一個使用 Python、Streamlit、SQLite 與 PostgreSQL 製作的食材期限管理工具。使用者可以新增冰箱裡的食材、設定到期日期，系統會自動計算剩餘天數，並標示即將過期、今天到期、已過期與已使用的食材。
+一個使用 Python、Streamlit、SQLite、PostgreSQL、React 與 FastAPI 製作的食材期限管理工具。使用者可以新增冰箱裡的食材、設定到期日期，系統會自動計算剩餘天數，並標示即將過期、今天到期、已過期與已使用的食材。
 
-v8 新增 FastAPI 後端雛形。Streamlit 版本仍保留作為可操作的資料工具，React 前端展示版負責產品介面，FastAPI 後端先使用 mock data 驗證 API 路由。
+v9 開始讓 React 前端串接 FastAPI。Streamlit 版本仍保留作為可操作的資料工具，React 前端負責更接近正式產品的操作介面，FastAPI 後端先使用 mock data 驗證 API 路由與前後端資料流。
 
 ## 專案動機
 
@@ -46,12 +46,13 @@ v8 新增 FastAPI 後端雛形。Streamlit 版本仍保留作為可操作的資�
 - v6 補上前端展示版與 API 資料契約規劃
 - v7 新增 React / Vite 前端展示版，先以 mock data 展示產品介面
 - v8 新增 FastAPI 後端雛形，讓前端後續可以逐步接 API
+- v9 React 前端開始串接 FastAPI，可讀取家庭資料、食材清單、新增食材與標記已使用
 - 繁體中文介面，適合作為初學者作品集專案
 
 ## Demo Screenshots
 
-以下截圖對應目前 v7 前端展示版。v7 使用 React / Vite 與 mock data 呈現更接近正式產品的操作介面，瀏覽與切換頁面比 Streamlit 原型更流暢。
-v1 到 v6 截圖仍保留在 `assets/screenshots/`，各版本資料夾也有 `version_notes.txt` 記錄版本演進。
+以下截圖對應 v7 前端展示版。v9 主要更新在前後端資料串接，介面版型沒有大幅更動，因此暫時沿用 v7 截圖作為產品介面展示。
+v1 到 v9 的版本紀錄仍保留在 `assets/screenshots/`，各版本資料夾也有 `version_notes.txt` 記錄版本演進。
 
 ### v7 Dashboard 統計
 
@@ -87,28 +88,30 @@ v1 到 v6 截圖仍保留在 `assets/screenshots/`，各版本資料夾也有 `v
 - FastAPI
 - Uvicorn
 
-## v8 專案架構定位
+## v9 專案架構定位
 
 目前專案分成三個層次：
 
 - `app.py`：Streamlit 可操作資料工具版，負責驗證資料流程與 PostgreSQL 保存。
-- `frontend/`：React / Vite 前端展示版，先用 mock data 呈現更漂亮的產品介面。
+- `frontend/`：React / Vite 前端版，v9 開始呼叫 FastAPI 讀取與更新食材資料。
 - `backend/`：FastAPI 後端雛形，先用 mock data 提供 API 路由，後續再接 PostgreSQL。
 
-v8 的重點不是取代 Streamlit，而是開始補上前後端分離需要的 API 層。
+v9 的重點不是取代 Streamlit，而是讓 React 與 FastAPI 先形成可展示的前後端資料流。
 
-## v7 前端展示版
+## v9 前端串接版
 
-目前這個 repo 仍以 Streamlit 作為可執行的資料工具版本。v7 新增 `frontend/`，先用 React / Vite 與 mock data 做出更漂亮的前端展示版。
+目前這個 repo 仍以 Streamlit 作為可執行的資料工具版本。v7 新增 `frontend/` 做產品介面展示，v9 開始讓前端呼叫 FastAPI。
 
-前端展示版目前包含：
+前端串接版目前包含：
 
 - Dashboard 統計卡片
 - 已過期、今天到期與 7 天內到期分區提醒
 - 食材卡片
 - 搜尋、分類篩選與排序
-- 新增食材展示流程
-- 家庭管理展示頁
+- 從 FastAPI 讀取家庭、成員與食材清單
+- 透過 FastAPI 新增食材
+- 透過 FastAPI 標記已使用
+- 家庭管理資料顯示
 
 相關文件：
 
@@ -116,6 +119,11 @@ v8 的重點不是取代 Streamlit，而是開始補上前後端分離需要的 
 - [API 與資料契約草案](docs/api_plan.md)
 
 前端展示版執行方式：
+
+```bash
+cd backend
+uvicorn app.main:app --reload --port 8008
+```
 
 ```bash
 cd frontend
@@ -136,6 +144,7 @@ npm run dev
 | v6 | 補上前端展示版規劃與 API 資料契約草案 |
 | v7 | 新增 React / Vite 前端展示版與 mock data 互動 |
 | v8 | 新增 FastAPI 後端雛形與 mock API |
+| v9 | React 前端串接 FastAPI，完成讀取清單、新增食材與標記已使用的前後端資料流 |
 
 ## 專案架構
 
@@ -164,8 +173,10 @@ fridge-expiry-tracker/
 │   ├── index.html
 │   ├── package-lock.json
 │   ├── package.json
+│   ├── .env.example
 │   ├── README.md
 │   └── src/
+│       ├── api.js
 │       ├── main.jsx
 │       └── styles.css
 ├── src/
@@ -216,7 +227,9 @@ fridge-expiry-tracker/
         │   ├── family_management.png
         │   ├── food_list.png
         │   └── version_notes.txt
-        └── v8/
+        ├── v8/
+        │   └── version_notes.txt
+        └── v9/
             └── version_notes.txt
 ```
 
@@ -244,7 +257,17 @@ data/fridge.db
 
 `data/fridge.db` 是本機開發資料，已加入 `.gitignore`，不會提交到 GitHub。
 
-## 前端展示版執行方式
+## 前端串接版執行方式
+
+請先啟動 FastAPI 後端：
+
+```bash
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8008
+```
+
+再啟動 React 前端：
 
 ```bash
 cd frontend
@@ -252,7 +275,15 @@ npm install
 npm run dev
 ```
 
-v7 前端展示版目前使用 mock data，重新整理後會回到預設資料。後續版本會再接 FastAPI 與 PostgreSQL。
+前端預設 API 位置為：
+
+```text
+http://127.0.0.1:8008
+```
+
+如需調整，可參考 `frontend/.env.example` 設定 `VITE_API_BASE_URL`。
+
+v9 後端仍使用記憶體 mock data，重新啟動 FastAPI 後會回到預設資料。後續版本會再接 PostgreSQL。
 
 ## FastAPI 後端執行方式
 
@@ -268,7 +299,19 @@ uvicorn app.main:app --reload
 http://127.0.0.1:8000/docs
 ```
 
-v8 後端目前使用 mock data，重啟服務後會回到預設資料。後續版本會再接 PostgreSQL。
+若要搭配 v9 前端，建議使用：
+
+```bash
+uvicorn app.main:app --reload --port 8008
+```
+
+並開啟：
+
+```text
+http://127.0.0.1:8008/docs
+```
+
+v9 後端目前使用 mock data，重啟服務後會回到預設資料。後續版本會再接 PostgreSQL。
 
 ## Streamlit Cloud 資料庫設定
 
@@ -394,13 +437,12 @@ expiry_date - today
 
 ## 專案限制
 
-- v8 的 Streamlit 版本仍使用家庭代碼與邀請碼做簡單資料隔離，尚未加入正式登入或權限管理。
+- 目前 Streamlit 版本仍使用家庭代碼與邀請碼做簡單資料隔離，尚未加入正式登入或權限管理。
 - v3 已支援 PostgreSQL，但目前尚未加入正式使用者帳號與權限控管。
 - 公開部署時，請不要輸入敏感或真實個資。
 - 日期需要手動輸入，尚未支援 OCR 辨識包裝日期。
 - 尚未加入通知功能，因此需要使用者主動開啟 App 查看。
-- v7 前端展示版目前使用 mock data，尚未連接 API 或資料庫。
-- v8 FastAPI 後端目前也使用 mock data，尚未連接 PostgreSQL。
+- v9 React 前端已可串接 FastAPI，但 FastAPI 目前仍使用 mock data，尚未連接 PostgreSQL。
 
 ## Roadmap
 
@@ -422,7 +464,7 @@ expiry_date - today
 - [x] API 與資料契約草案
 - [x] React / Vite 前端展示版
 - [x] FastAPI 後端雛形
-- [ ] React 前端串接 FastAPI
+- [x] React 前端串接 FastAPI
 - [ ] FastAPI 串接 PostgreSQL
 - [ ] 正式登入與權限管理
 - [ ] LINE Messaging API 每日提醒

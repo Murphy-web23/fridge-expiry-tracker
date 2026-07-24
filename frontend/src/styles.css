@@ -156,12 +156,54 @@ button {
   box-shadow: 0 10px 24px rgb(23 54 43 / 20%);
 }
 
+.primary-action:disabled,
+.ghost-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.58;
+}
+
 .ghost-action {
   width: 100%;
   margin-top: 16px;
   border: 1px solid #cbd8d0;
   background: #ffffff;
   color: #17362b;
+}
+
+.api-notice {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: -8px 0 20px;
+  border: 1px solid #cbd8d0;
+  border-radius: 8px;
+  padding: 12px 14px;
+  background: #ffffff;
+  color: #486057;
+  font-weight: 800;
+}
+
+.api-notice.success {
+  border-color: #b8dfc5;
+  background: #edf9f1;
+  color: #1f7a3d;
+}
+
+.api-notice.error {
+  border-color: #ffc6c0;
+  background: #fff1ef;
+  color: #b7352b;
+}
+
+.api-notice button {
+  min-height: 34px;
+  border: 1px solid currentColor;
+  border-radius: 8px;
+  padding: 0 12px;
+  background: transparent;
+  color: inherit;
+  font-weight: 900;
 }
 
 .page-grid {
