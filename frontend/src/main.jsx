@@ -1,6 +1,40 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
+  AlertTriangle,
+  Apple,
+  ArrowUpDown,
+  BarChart3,
+  Beef,
+  CalendarClock,
+  CalendarDays,
+  Check,
+  CheckCircle2,
+  CircleDollarSign,
+  Clock3,
+  CookingPot,
+  CupSoda,
+  Fish,
+  House,
+  Leaf,
+  ListChecks,
+  Milk,
+  Minus,
+  NotebookText,
+  Package,
+  Plus,
+  ReceiptText,
+  RefreshCw,
+  Search,
+  ShieldCheck,
+  ShoppingBasket,
+  Snowflake,
+  Sparkles,
+  UserRound,
+  UsersRound,
+  WalletCards,
+} from "lucide-react";
+import {
   adjustFoodQuantity,
   apiConfig,
   createFood,
@@ -60,6 +94,29 @@ const categoryColors = {
   調味料: "#8c7853",
   其他: "#7a8790",
 };
+const categoryIcons = {
+  蔬菜: Leaf,
+  水果: Apple,
+  肉類: Beef,
+  海鮮: Fish,
+  乳製品: Milk,
+  冷凍食品: Snowflake,
+  飲料: CupSoda,
+  調味料: CookingPot,
+  其他: Package,
+};
+const statusIcons = {
+  Expired: AlertTriangle,
+  Today: Clock3,
+  Soon: CalendarClock,
+  Safe: ShieldCheck,
+  Used: CheckCircle2,
+};
+
+function CategoryIcon({ category, size = 24 }) {
+  const Icon = categoryIcons[category] || Package;
+  return <Icon size={size} strokeWidth={2.2} aria-hidden="true" />;
+}
 
 function todayText() {
   return new Date().toISOString().slice(0, 10);
@@ -254,7 +311,9 @@ function App() {
     <div className="app-shell">
       <aside className="sidebar">
         <div className="brand-block">
-          <span className="brand-mark">冷</span>
+          <span className="brand-mark" aria-hidden="true">
+            <Snowflake size={27} strokeWidth={2.4} />
+          </span>
           <div>
             <p className="eyebrow">Fridge Tracker</p>
             <h1>食材期限管理</h1>
@@ -263,24 +322,29 @@ function App() {
 
         <nav className="nav-list" aria-label="主要選單">
           <button className={activePage === "dashboard" ? "active" : ""} onClick={() => setActivePage("dashboard")}>
-            期限總覽
+            <CalendarClock size={20} aria-hidden="true" />
+            <span>期限總覽</span>
           </button>
           <button className={activePage === "foods" ? "active" : ""} onClick={() => setActivePage("foods")}>
-            食材清單
+            <ListChecks size={20} aria-hidden="true" />
+            <span>食材清單</span>
           </button>
           <button className={activePage === "spending" ? "active" : ""} onClick={() => setActivePage("spending")}>
-            消費統計
+            <BarChart3 size={20} aria-hidden="true" />
+            <span>消費統計</span>
           </button>
           <button className={activePage === "add" ? "active" : ""} onClick={() => setActivePage("add")}>
-            新增食材
+            <Plus size={20} aria-hidden="true" />
+            <span>新增食材</span>
           </button>
           <button className={activePage === "family" ? "active" : ""} onClick={() => setActivePage("family")}>
-            家庭管理
+            <UsersRound size={20} aria-hidden="true" />
+            <span>家庭管理</span>
           </button>
         </nav>
 
         <section className="family-card">
-          <p className="eyebrow">目前家庭</p>
+          <p className="eyebrow family-label"><House size={15} aria-hidden="true" />目前家庭</p>
           <label className="sidebar-select">
             家庭
             <select value={familyCode} onChange={(event) => setFamilyCode(event.target.value)}>
@@ -301,19 +365,20 @@ function App() {
               ))}
             </select>
           </label>
-          <p className="family-members">家庭成員：{memberNames}</p>
-          <span>資料來源：FastAPI</span>
+          <p className="family-members"><UsersRound size={15} aria-hidden="true" />家庭成員：{memberNames}</p>
+          <span><CheckCircle2 size={14} aria-hidden="true" />資料來源：FastAPI</span>
         </section>
       </aside>
 
       <main className="main-content">
         <header className="topbar">
           <div>
-            <p className="eyebrow">v10 金額與資訊優化版</p>
+            <p className="eyebrow"><Sparkles size={15} aria-hidden="true" />v10.1 療癒視覺版</p>
             <h2>{activePage === "dashboard" ? "家庭冰箱 Dashboard" : pageTitle(activePage)}</h2>
           </div>
           <button className="primary-action" onClick={() => setActivePage("add")}>
-            新增食材
+            <Plus size={19} aria-hidden="true" />
+            <span>新增食材</span>
           </button>
         </header>
 
@@ -361,19 +426,23 @@ function pageTitle(page) {
 
 function ApiNotice({ isLoading, errorMessage, onRetry }) {
   if (isLoading) {
-    return <div className="api-notice">正在從 FastAPI 載入家庭冰箱資料...</div>;
+    return <div className="api-notice"><RefreshCw className="spin" size={18} aria-hidden="true" />正在載入家庭冰箱資料...</div>;
   }
 
   if (errorMessage) {
     return (
       <div className="api-notice error">
-        <span>{errorMessage}</span>
-        <button onClick={onRetry}>重新載入</button>
+        <span><AlertTriangle size={18} aria-hidden="true" />{errorMessage}</span>
+        <button onClick={onRetry}><RefreshCw size={16} aria-hidden="true" />重新載入</button>
       </div>
     );
   }
 
-  return <div className="api-notice success">已連線：{apiConfig.apiBaseUrl}</div>;
+  return (
+    <div className="api-notice success">
+      <span><CheckCircle2 size={18} aria-hidden="true" />家庭冰箱已同步</span>
+    </div>
+  );
 }
 
 function Dashboard({ stats, foods, onMarkUsed, onAdjustQuantity }) {
@@ -385,17 +454,20 @@ function Dashboard({ stats, foods, onMarkUsed, onAdjustQuantity }) {
   return (
     <div className="page-grid">
       <section className="stats-grid">
-        <StatCard label="總食材數" value={stats.total} tone="neutral" />
-        <StatCard label="已過期" value={stats.expired} tone="danger" />
-        <StatCard label="今天到期" value={stats.today} tone="warning" />
-        <StatCard label="7 天內到期" value={stats.soon} tone="info" />
-        <StatCard label="冰箱食材金額" value={formatPrice(stats.totalValue)} tone="money" compact />
+        <StatCard label="總食材數" value={stats.total} tone="neutral" icon={ShoppingBasket} />
+        <StatCard label="已過期" value={stats.expired} tone="danger" icon={AlertTriangle} />
+        <StatCard label="今天到期" value={stats.today} tone="warning" icon={Clock3} />
+        <StatCard label="7 天內到期" value={stats.soon} tone="info" icon={CalendarClock} />
+        <StatCard label="冰箱食材金額" value={formatPrice(stats.totalValue)} tone="money" compact icon={WalletCards} />
       </section>
 
       <section className="dashboard-band">
-        <div>
-          <p className="eyebrow">需要優先處理</p>
-          <h3>把最緊急的食材排在前面</h3>
+        <div className="dashboard-band-title">
+          <span className="soft-icon"><Sparkles size={22} aria-hidden="true" /></span>
+          <div>
+            <p className="eyebrow">需要優先處理</p>
+            <h3>今天也一起把冰箱照顧好</h3>
+          </div>
         </div>
         <p>期限、採買金額與簡短備註集中顯示，打開頁面就能掌握冰箱現況。</p>
       </section>
@@ -425,10 +497,13 @@ function Dashboard({ stats, foods, onMarkUsed, onAdjustQuantity }) {
   );
 }
 
-function StatCard({ label, value, tone, compact = false }) {
+function StatCard({ label, value, tone, icon: Icon, compact = false }) {
   return (
     <article className={`stat-card ${tone}`}>
-      <p>{label}</p>
+      <div className="stat-card-heading">
+        <p>{label}</p>
+        <span><Icon size={20} strokeWidth={2.2} aria-hidden="true" /></span>
+      </div>
       <strong className={compact ? "compact-value" : ""}>{value}</strong>
     </article>
   );
@@ -449,11 +524,11 @@ function FoodList({
     <section className="panel">
       <div className="toolbar">
         <label>
-          搜尋
+          <span className="field-label"><Search size={16} aria-hidden="true" />搜尋</span>
           <input value={search} onChange={(event) => setSearch(event.target.value)} placeholder="輸入食材名稱" />
         </label>
         <label>
-          分類
+          <span className="field-label"><Leaf size={16} aria-hidden="true" />分類</span>
           <select value={filter} onChange={(event) => setFilter(event.target.value)}>
             {categories.map((category) => (
               <option key={category}>{category}</option>
@@ -461,7 +536,7 @@ function FoodList({
           </select>
         </label>
         <label>
-          排序
+          <span className="field-label"><ArrowUpDown size={16} aria-hidden="true" />排序</span>
           <select value={sortMode} onChange={(event) => setSortMode(event.target.value)}>
             <option value="urgent">期限由近到遠</option>
             <option value="safe">期限由遠到近</option>
@@ -471,14 +546,18 @@ function FoodList({
       </div>
 
       <div className="food-grid">
-        {foods.map((food) => (
-          <FoodCard
-            key={food.id}
-            food={food}
-            onMarkUsed={onMarkUsed}
-            onAdjustQuantity={onAdjustQuantity}
-          />
-        ))}
+        {foods.length === 0 ? (
+          <EmptyState text="找不到符合條件的食材，換個關鍵字看看。" />
+        ) : (
+          foods.map((food) => (
+            <FoodCard
+              key={food.id}
+              food={food}
+              onMarkUsed={onMarkUsed}
+              onAdjustQuantity={onAdjustQuantity}
+            />
+          ))
+        )}
       </div>
     </section>
   );
@@ -492,7 +571,7 @@ function FoodSection({ title, foods, emptyText, onMarkUsed, onAdjustQuantity }) 
         <span>{foods.length} 筆</span>
       </div>
       {foods.length === 0 ? (
-        <p className="empty-text">{emptyText}</p>
+        <EmptyState text={emptyText} />
       ) : (
         <div className="food-grid">
           {foods.map((food) => (
@@ -509,23 +588,39 @@ function FoodSection({ title, foods, emptyText, onMarkUsed, onAdjustQuantity }) 
   );
 }
 
+function EmptyState({ text }) {
+  return (
+    <div className="empty-state">
+      <span><Sparkles size={24} aria-hidden="true" /></span>
+      <div>
+        <strong>這一區整理得很乾淨</strong>
+        <p>{text}</p>
+      </div>
+    </div>
+  );
+}
+
 function FoodCard({ food, onMarkUsed, onAdjustQuantity }) {
   const notePreview = shortNote(food.note);
   const quantityAmount = Number.parseFloat(food.quantity);
   const canDecrease = Number.isFinite(quantityAmount) && quantityAmount > 0 && food.status !== "Used";
+  const StatusIcon = statusIcons[food.status] || CheckCircle2;
 
   return (
     <article className={`food-card ${food.status.toLowerCase()}`}>
       <div className="food-card-header">
-        <div>
-          <h4>{food.name}</h4>
-          <p>
-            {food.category} ・ {food.quantity}
-          </p>
+        <div className={`food-identity category-${food.category}`}>
+          <span className="food-icon"><CategoryIcon category={food.category} /></span>
+          <div>
+            <h4>{food.name}</h4>
+            <p>{food.category} ・ {food.quantity}</p>
+          </div>
         </div>
         <div className="food-card-badges">
           <span className="price-badge">{formatPrice(food.price)}</span>
-          <span className={`status-badge ${food.status.toLowerCase()}`}>{statusText[food.status]}</span>
+          <span className={`status-badge ${food.status.toLowerCase()}`}>
+            <StatusIcon size={14} aria-hidden="true" />{statusText[food.status]}
+          </span>
         </div>
       </div>
       <dl>
@@ -547,7 +642,7 @@ function FoodCard({ food, onMarkUsed, onAdjustQuantity }) {
         </div>
       </dl>
       <div className="note-preview" title={food.note || ""}>
-        <span>備註</span>
+        <span><NotebookText size={15} aria-hidden="true" />小提醒</span>
         <p>{notePreview}</p>
       </div>
       <div className="food-card-actions">
@@ -559,7 +654,7 @@ function FoodCard({ food, onMarkUsed, onAdjustQuantity }) {
             disabled={!canDecrease}
             onClick={() => onAdjustQuantity(food.id, -1)}
           >
-            −
+            <Minus size={18} aria-hidden="true" />
           </button>
           <button
             type="button"
@@ -568,16 +663,16 @@ function FoodCard({ food, onMarkUsed, onAdjustQuantity }) {
             disabled={food.status === "Used"}
             onClick={() => onAdjustQuantity(food.id, 1)}
           >
-            +
+            <Plus size={18} aria-hidden="true" />
           </button>
         </div>
         {food.status === "Used" ? (
           <button className="ghost-action" disabled>
-            已標記使用
+            <Check size={17} aria-hidden="true" />已標記使用
           </button>
         ) : (
           <button className="ghost-action" onClick={() => onMarkUsed(food.id)}>
-            標記已使用
+            <Check size={17} aria-hidden="true" />標記已使用
           </button>
         )}
       </div>
@@ -638,16 +733,19 @@ function SpendingPanel({ foods, familyName }) {
     <div className="spending-page">
       <section className="spending-summary">
         <article className="spending-metric">
+          <span className="metric-icon"><CalendarDays size={22} aria-hidden="true" /></span>
           <p>本週採買</p>
           <strong>{formatPrice(weekTotal)}</strong>
           <span>週一至週日</span>
         </article>
         <article className="spending-metric featured">
+          <span className="metric-icon"><CircleDollarSign size={22} aria-hidden="true" /></span>
           <p>本月採買</p>
           <strong>{formatPrice(monthTotal)}</strong>
           <span>{now.getFullYear()} 年 {now.getMonth() + 1} 月</span>
         </article>
         <article className={`spending-metric ${missingPriceCount > 0 ? "attention" : ""}`}>
+          <span className="metric-icon"><ShieldCheck size={22} aria-hidden="true" /></span>
           <p>資料完整度</p>
           <strong>{missingPriceCount > 0 ? `${missingPriceCount} 筆未填` : "完整"}</strong>
           <span>{missingPriceCount > 0 ? "補上金額後統計會更準確" : "所有食材都有金額"}</span>
@@ -693,7 +791,7 @@ function SpendingPanel({ foods, familyName }) {
             <div className="chart-legend">
               {categoryTotals.map((item) => (
                 <span key={item.category}>
-                  <i style={{ background: item.color }} />
+                  <i style={{ background: item.color }}><CategoryIcon category={item.category} size={13} /></i>
                   {item.category} {item.percent}%
                 </span>
               ))}
@@ -712,7 +810,7 @@ function SpendingPanel({ foods, familyName }) {
             categoryTotals.map((item) => (
               <div className="ranking-row" key={item.category}>
                 <div>
-                  <strong>{item.category}</strong>
+                  <strong className="category-ranking-name"><CategoryIcon category={item.category} size={17} />{item.category}</strong>
                   <span>{formatPrice(item.total)}（{item.percent}%）</span>
                 </div>
                 <div className="ranking-track">
@@ -726,7 +824,7 @@ function SpendingPanel({ foods, familyName }) {
 
       <section className="panel spending-table-panel">
         <div className="section-heading">
-          <h3>單筆食材採買明細</h3>
+          <h3 className="heading-with-icon"><ReceiptText size={20} aria-hidden="true" />單筆食材採買明細</h3>
           <span>{visibleFoods.length} 筆</span>
         </div>
         <div className="table-scroll">
@@ -745,7 +843,7 @@ function SpendingPanel({ foods, familyName }) {
               {visibleFoods.map((food) => (
                 <tr key={food.id}>
                   <td><strong>{food.name}</strong></td>
-                  <td>{food.category}</td>
+                  <td><span className="table-category"><CategoryIcon category={food.category} size={16} />{food.category}</span></td>
                   <td>{food.quantity}</td>
                   <td className={food.price > 0 ? "price-cell" : "missing-price"}>
                     {food.price > 0 ? formatPrice(food.price) : "未填"}
@@ -787,7 +885,8 @@ function AddFoodForm({ form, setForm, onSubmit, isSaving, familyName, currentMem
 
   return (
     <section className="form-panel">
-      <div>
+      <div className="form-intro">
+        <span className="form-hero-icon"><ShoppingBasket size={42} strokeWidth={1.9} aria-hidden="true" /></span>
         <p className="eyebrow">新增到 {familyName}</p>
         <h3>新增食材</h3>
         <p>目前操作者：<strong>{currentMember}</strong></p>
@@ -924,9 +1023,8 @@ function FamilyPanel({ family, members, currentMember }) {
       <div className="member-grid">
         {members.map((member) => (
           <article key={member.member_name} className="member-card">
-            <strong>
-              {member.member_name} ・ {member.role}
-            </strong>
+            <span className="member-avatar"><UserRound size={22} aria-hidden="true" /></span>
+            <strong>{member.member_name} ・ {member.role}</strong>
             <span>已加入家庭冰箱</span>
           </article>
         ))}

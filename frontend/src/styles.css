@@ -15,7 +15,7 @@ body {
   margin: 0;
   min-width: 320px;
   min-height: 100vh;
-  background: #f4f7f3;
+  background: #f7f8f4;
 }
 
 button,
@@ -64,10 +64,11 @@ button {
   width: 48px;
   height: 48px;
   place-items: center;
-  border-radius: 14px;
+  border-radius: 8px;
   background: #d7f171;
   color: #17362b;
   font-weight: 900;
+  box-shadow: 0 7px 0 rgb(9 38 29 / 28%);
 }
 
 .brand-block h1,
@@ -79,6 +80,9 @@ button {
 }
 
 .eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin: 0 0 6px;
   color: #6f8b80;
   font-size: 0.78rem;
@@ -98,6 +102,9 @@ button {
 }
 
 .nav-list button {
+  display: flex;
+  align-items: center;
+  gap: 11px;
   border: 0;
   border-radius: 8px;
   padding: 12px 14px;
@@ -110,6 +117,10 @@ button {
 .nav-list button:hover {
   background: #245445;
   color: #ffffff;
+}
+
+.nav-list button.active svg {
+  color: #d7f171;
 }
 
 .nav-list button:focus-visible,
@@ -126,6 +137,13 @@ button {
   border: 1px solid rgb(255 255 255 / 14%);
   border-radius: 8px;
   background: rgb(255 255 255 / 8%);
+}
+
+.family-label,
+.family-members {
+  display: flex;
+  align-items: center;
+  gap: 7px;
 }
 
 .family-card h2 {
@@ -152,6 +170,8 @@ button {
 
 .family-card span {
   display: inline-flex;
+  align-items: center;
+  gap: 5px;
   margin-top: 10px;
   border-radius: 999px;
   padding: 5px 9px;
@@ -164,7 +184,11 @@ button {
 .main-content {
   min-width: 0;
   padding: 30px;
-  background: #f4f7f3;
+  background:
+    linear-gradient(#eef7d9 1px, transparent 1px),
+    linear-gradient(90deg, #eef7d9 1px, transparent 1px),
+    #f7f8f4;
+  background-size: 32px 32px;
 }
 
 .topbar {
@@ -177,6 +201,10 @@ button {
 
 .primary-action,
 .ghost-action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
   min-height: 42px;
   border-radius: 8px;
   padding: 0 16px;
@@ -227,6 +255,8 @@ button {
 }
 
 .quantity-stepper button {
+  display: grid;
+  place-items: center;
   width: 42px;
   min-height: 42px;
   border: 1px solid #cbd8d0;
@@ -264,6 +294,23 @@ button {
   background: #ffffff;
   color: #486057;
   font-weight: 800;
+}
+
+.api-notice > span,
+.api-notice > button {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.spin {
+  animation: spin 1.1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .api-notice.success {
@@ -311,6 +358,25 @@ button {
 
 .stat-card {
   padding: 18px;
+  overflow: hidden;
+}
+
+.stat-card-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.stat-card-heading span {
+  display: grid;
+  width: 38px;
+  height: 38px;
+  flex: 0 0 38px;
+  place-items: center;
+  border-radius: 8px;
+  background: #eef3ef;
+  color: #456458;
 }
 
 .stat-card p {
@@ -333,9 +399,19 @@ button {
   background: #fff1ef;
 }
 
+.stat-card.danger .stat-card-heading span {
+  background: #ffe0db;
+  color: #bc3b30;
+}
+
 .stat-card.warning {
   border-color: #ffd9a3;
   background: #fff7ea;
+}
+
+.stat-card.warning .stat-card-heading span {
+  background: #ffe9be;
+  color: #9c650e;
 }
 
 .stat-card.info {
@@ -343,9 +419,19 @@ button {
   background: #eef7ff;
 }
 
+.stat-card.info .stat-card-heading span {
+  background: #dcecff;
+  color: #1768bd;
+}
+
 .stat-card.money {
   border-color: #b8dfc5;
   background: #edf9f1;
+}
+
+.stat-card.money .stat-card-heading span {
+  background: #d9f2df;
+  color: #237949;
 }
 
 .dashboard-band {
@@ -359,6 +445,23 @@ button {
 .dashboard-band h3,
 .section-heading h3 {
   margin: 0;
+}
+
+.dashboard-band-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.soft-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  place-items: center;
+  border-radius: 8px;
+  background: #fff0b8;
+  color: #9e6900;
 }
 
 .dashboard-band p {
@@ -387,6 +490,22 @@ button {
   font-weight: 800;
 }
 
+.heading-with-icon {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.heading-with-icon svg {
+  color: #4f806c;
+}
+
+.section-heading > span::before {
+  content: "•";
+  margin-right: 5px;
+  color: #78a88d;
+}
+
 .food-grid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
@@ -408,6 +527,64 @@ button {
     transform 160ms ease,
     box-shadow 160ms ease,
     border-color 160ms ease;
+}
+
+.food-identity {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 11px;
+}
+
+.food-icon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 48px;
+  place-items: center;
+  border-radius: 8px;
+  background: #edf4ef;
+  color: #3b8f63;
+}
+
+.category-水果 .food-icon {
+  background: #fff0ed;
+  color: #d35f52;
+}
+
+.category-肉類 .food-icon {
+  background: #fff0e5;
+  color: #b8682f;
+}
+
+.category-海鮮 .food-icon {
+  background: #eaf3ff;
+  color: #4f7fc4;
+}
+
+.category-乳製品 .food-icon {
+  background: #fff7d9;
+  color: #a88b21;
+}
+
+.category-冷凍食品 .food-icon {
+  background: #eeefff;
+  color: #676eb7;
+}
+
+.category-飲料 .food-icon {
+  background: #e5f6f7;
+  color: #387f85;
+}
+
+.category-調味料 .food-icon {
+  background: #f4eee5;
+  color: #806a43;
+}
+
+.category-其他 .food-icon {
+  background: #eff1f2;
+  color: #68757c;
 }
 
 .food-card:hover {
@@ -468,6 +645,9 @@ button {
 }
 
 .status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
   white-space: nowrap;
   border-radius: 999px;
   padding: 5px 9px;
@@ -519,13 +699,48 @@ dd {
   border: 1px solid #e1e9e4;
   border-radius: 8px;
   padding: 11px 12px;
-  background: #f8faf8;
+  background: #fffdf4;
 }
 
 .note-preview span {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
   color: #73857c;
   font-size: 0.76rem;
   font-weight: 800;
+}
+
+.empty-state {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: 96px;
+  border: 1px dashed #bfd1c5;
+  border-radius: 8px;
+  padding: 18px;
+  background: #fbfdf9;
+}
+
+.empty-state > span {
+  display: grid;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
+  place-items: center;
+  border-radius: 8px;
+  background: #e7f3d9;
+  color: #4d845e;
+}
+
+.empty-state strong {
+  display: block;
+  margin-bottom: 4px;
+}
+
+.empty-state p {
+  margin: 0;
+  color: #6b7d74;
 }
 
 .note-preview p {
@@ -607,6 +822,12 @@ label {
   font-weight: 800;
 }
 
+.field-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
 input,
 select,
 textarea {
@@ -648,6 +869,23 @@ textarea {
   gap: 24px;
 }
 
+.form-intro {
+  align-self: start;
+}
+
+.form-hero-icon {
+  display: grid;
+  width: 88px;
+  height: 88px;
+  place-items: center;
+  margin-bottom: 22px;
+  border: 1px solid #d4e2d8;
+  border-radius: 8px;
+  background: #eff7e8;
+  color: #2f6b56;
+  box-shadow: 9px 9px 0 #d7f171;
+}
+
 .form-panel p,
 .family-page p {
   color: #65766f;
@@ -661,6 +899,10 @@ textarea {
 }
 
 .member-card {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  column-gap: 11px;
+  align-items: center;
   border: 1px solid #d8e3dc;
   border-radius: 8px;
   padding: 16px;
@@ -668,13 +910,25 @@ textarea {
 }
 
 .member-card strong,
-.member-card span {
+.member-card > span:not(.member-avatar) {
   display: block;
 }
 
-.member-card span {
+.member-card > span:not(.member-avatar) {
+  grid-column: 2;
   margin-top: 8px;
   color: #65766f;
+}
+
+.member-avatar {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  grid-row: 1 / span 2;
+  place-items: center;
+  border-radius: 8px;
+  background: #e7f3d9;
+  color: #346d51;
 }
 
 .spending-page {
@@ -689,12 +943,33 @@ textarea {
 }
 
 .spending-metric {
+  position: relative;
   min-height: 176px;
   border: 1px solid #dce6df;
   border-radius: 8px;
   padding: 22px;
   background: #ffffff;
   box-shadow: 0 12px 30px rgb(38 69 56 / 8%);
+}
+
+.metric-icon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  place-items: center;
+  border-radius: 8px;
+  background: #e8f3e9;
+  color: #4f806c !important;
+}
+
+.spending-metric.featured .metric-icon {
+  background: rgb(255 255 255 / 16%);
+  color: #ffffff !important;
+}
+
+.spending-metric.attention .metric-icon {
+  background: #ffe2d6;
+  color: #b44c2e !important;
 }
 
 .spending-metric p,
@@ -706,7 +981,7 @@ textarea {
 
 .spending-metric strong {
   display: block;
-  margin: 24px 0 8px;
+  margin: 16px 0 8px;
   font-size: 2rem;
   line-height: 1.1;
 }
@@ -828,9 +1103,19 @@ textarea {
 }
 
 .chart-legend i {
-  width: 11px;
-  height: 11px;
-  border-radius: 3px;
+  display: grid;
+  width: 25px;
+  height: 25px;
+  place-items: center;
+  border-radius: 6px;
+  color: #ffffff;
+}
+
+.category-ranking-name,
+.table-category {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
 }
 
 .spending-ranking {
@@ -939,6 +1224,7 @@ textarea {
 
   .main-content {
     padding: 20px;
+    background-size: 24px 24px;
   }
 
   .quantity-controls {
@@ -960,5 +1246,16 @@ textarea {
 
   .chart-legend {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
   }
 }
