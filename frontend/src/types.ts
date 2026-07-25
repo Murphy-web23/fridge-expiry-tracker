@@ -2,11 +2,14 @@ export type PageKey = "dashboard" | "foods" | "spending" | "add" | "family";
 
 export type FoodStatusLabel = "Expired" | "Today" | "Soon" | "Safe" | "Used";
 
+export type StorageLocation = "冰箱冷藏" | "冷凍庫" | "常溫儲藏" | "飲品櫃";
+
 export interface ApiFood {
   id: number;
   family_code: string;
   name: string;
   category: string;
+  storage_location: StorageLocation;
   quantity: string;
   price: number;
   purchase_date: string | null;
@@ -27,6 +30,7 @@ export interface Food {
   id: number;
   name: string;
   category: string;
+  storageLocation: StorageLocation;
   quantity: string;
   price: number;
   purchaseDate: string;
@@ -41,6 +45,7 @@ export interface Food {
 export interface FoodCreatePayload {
   name: string;
   category: string;
+  storage_location: StorageLocation;
   quantity: string;
   price: number;
   purchase_date: string;
@@ -65,6 +70,7 @@ export interface FoodFormState {
   preset: string;
   name: string;
   category: string;
+  storageLocation: StorageLocation;
   quantityAmount: string;
   quantityUnit: string;
   price: string;

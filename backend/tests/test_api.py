@@ -24,6 +24,7 @@ class FoodApiTestCase(unittest.TestCase):
             json={
                 "name": "測試豆腐",
                 "category": "其他",
+                "storage_location": "常溫儲藏",
                 "quantity": "2 盒",
                 "price": 75,
                 "purchase_date": "2026-07-25",
@@ -35,6 +36,7 @@ class FoodApiTestCase(unittest.TestCase):
         self.assertEqual(created.status_code, 201)
         food = created.json()
         self.assertEqual(food["price"], 75)
+        self.assertEqual(food["storage_location"], "常溫儲藏")
 
         quantity_updated = self.client.patch(
             f"/families/demo-home/foods/{food['id']}/quantity",

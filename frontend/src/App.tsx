@@ -9,7 +9,7 @@ import {
   getMembers,
   markFoodUsed,
 } from "./api";
-import { createInitialFoodForm } from "./constants";
+import { createInitialFoodForm, defaultStorageLocation, storageLocations } from "./constants";
 import { AddFoodForm } from "./components/AddFoodForm";
 import { Dashboard } from "./components/Dashboard";
 import { FamilyPanel } from "./components/FamilyPanel";
@@ -36,6 +36,9 @@ function normalizeFood(food: ApiFood): Food {
     id: food.id,
     name: food.name,
     category: food.category,
+    storageLocation: storageLocations.includes(food.storage_location)
+      ? food.storage_location
+      : defaultStorageLocation(food.category),
     quantity: food.quantity,
     price: Number(food.price) || 0,
     purchaseDate: food.purchase_date || "",
@@ -156,6 +159,7 @@ export default function App() {
         {
           name: form.name.trim(),
           category: form.category,
+          storage_location: form.storageLocation,
           quantity: `${quantityAmount} ${form.quantityUnit}`,
           price: Number(form.price) || 0,
           purchase_date: form.purchaseDate,

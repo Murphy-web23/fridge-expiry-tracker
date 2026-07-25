@@ -4,7 +4,7 @@ Repository name: `fridge-expiry-tracker`
 
 一個使用 Python、Streamlit、SQLite、PostgreSQL、React、TypeScript 與 FastAPI 製作的食材期限管理工具。使用者可以新增冰箱裡的食材、設定到期日期，系統會自動計算剩餘天數，並標示即將過期、今天到期、已過期與已使用的食材。
 
-v11 將 React 前端完整改寫為 TypeScript，導入 Tailwind CSS 與 Recharts，並建立「大地自然質感」設計系統。介面以柔軟奶白、鼠尾草綠、陶土赭紅與燕麥色呈現，搭配圓潤元件、Lucide 圖示與分類 emoji，保留原有 FastAPI 資料流程並改善桌面與手機操作體驗。
+v11 將 React 前端完整改寫為 TypeScript，導入 Tailwind CSS 與 Recharts，並建立「大地自然質感」設計系統。v11.1 再加入食材儲存位置與 Dashboard 分區快覽，讓家庭成員除了期限，也能快速掌握食材放在冷藏、冷凍、常溫或飲品櫃。
 
 ## 專案動機
 
@@ -31,6 +31,8 @@ v11 將 React 前端完整改寫為 TypeScript，導入 Tailwind CSS 與 Rechart
 - 新增食材名稱、分類、數量、購買日期、到期日期與備註
 - 記錄食材購買金額，Dashboard 顯示冰箱食材總金額
 - 使用常用食材下拉選單，自動帶入分類與建議單位
+- 新增食材時可選擇冰箱冷藏、冷凍庫、常溫儲藏或飲品櫃
+- Dashboard 顯示各儲存空間的在庫食材筆數
 - 數量與單位分開選擇，減少重複輸入
 - 新增食材數量限制為大於零的整數，避免不適用的小數數量
 - 使用期限快速按鈕設定 3、7、14、30 或 180 天後到期
@@ -63,11 +65,12 @@ v11 將 React 前端完整改寫為 TypeScript，導入 Tailwind CSS 與 Rechart
 - v10.1 使用 Lucide 圖示統一導覽、操作與狀態語言，並加入分類圖示與友善空狀態
 - v10.2 改用明亮側欄、純色背景、輕陰影與彩色 emoji，提升生活感與資訊辨識度
 - v11 改用 React TypeScript、Tailwind CSS 與 Recharts，建立可重用的自然暖色設計系統與響應式元件
+- v11.1 新增儲存位置欄位、位置預設規則與 Dashboard 儲存空間分區快覽
 - 繁體中文介面，適合作為初學者作品集專案
 
 ## Demo Screenshots
 
-以下截圖對應 v11 React TypeScript 前端版，展示 Natural Warm Organic 設計系統、期限管理、金額統計、快速新增與家庭操作介面。
+以下截圖對應 v11 React TypeScript 前端版，展示 Natural Warm Organic 設計系統、期限管理、金額統計、快速新增與家庭操作介面。v11.1 延續相同設計語言，並新增儲存空間分區功能。
 舊版截圖仍保留在 `assets/screenshots/`，可回顧專案從 Streamlit 原型到 React 介面的版本演進。
 
 ### v11 Dashboard
@@ -126,6 +129,7 @@ v11 的重點不是取代 Streamlit，而是用可維護的型別、共用元件
 前端串接版目前包含：
 
 - Dashboard 統計卡片
+- 冰箱冷藏、冷凍庫、常溫儲藏與飲品櫃分區快覽
 - 已過期、今天到期與 7 天內到期分區提醒
 - 食材卡片
 - 搜尋、分類篩選與排序
@@ -138,6 +142,7 @@ v11 的重點不是取代 Streamlit，而是用可維護的型別、共用元件
 - 類別支出占比、消費排行與採買明細
 - 未填金額完整度提醒
 - 常用食材、單位與期限快速選取
+- 儲存位置下拉選擇與分類預設位置
 - 家庭與目前操作者下拉選擇
 - 食材卡片簡短備註
 - 家庭管理資料顯示
@@ -178,6 +183,7 @@ npm run dev
 | v10.1 | 加入分類、期限狀態、導覽與操作圖示，優化空狀態、新增表單與整體視覺層次 |
 | v10.2 | 將深色工具介面改為輕盈生活風格，加入分類、狀態、統計與成員 emoji |
 | v11 | React 前端改寫為 TypeScript，導入 Tailwind CSS、Recharts 與 Natural Warm Organic 設計系統 |
+| v11.1 | 新增食材儲存位置、預設位置規則、卡片位置資訊與 Dashboard 儲存空間分區快覽 |
 
 ## 專案架構
 
@@ -427,6 +433,7 @@ DATABASE_URL = "postgresql://username:password@host:5432/database?sslmode=requir
 | family_code | TEXT | 家庭代碼，用來區分不同家庭 |
 | name | TEXT | 食材名稱，必填 |
 | category | TEXT | 食材分類 |
+| storage_location | TEXT | React / FastAPI 使用的儲存位置，可為冰箱冷藏、冷凍庫、常溫儲藏或飲品櫃 |
 | quantity | TEXT | 數量，例如 1 包、500g、2 瓶 |
 | price | INTEGER | 購買金額，以新台幣整數記錄 |
 | purchase_date | TEXT | 購買日期，格式為 YYYY-MM-DD |
@@ -499,6 +506,7 @@ expiry_date - today
 - 顯示分類占比、消費排行與採買明細
 - 提醒未填金額資料
 - 常用食材、數量單位與期限快速選取
+- 儲存位置選擇、自動預設與 Dashboard 分區統計
 - 新增食材數量正整數驗證
 - 切換家庭與目前操作者
 - 使用卡片按鈕增加或減少數量
@@ -559,6 +567,7 @@ expiry_date - today
 - [x] Tailwind CSS 自然暖色設計系統
 - [x] Recharts 消費圖表
 - [x] 桌面與手機響應式介面
+- [x] 食材儲存位置與 Dashboard 分區快覽
 - [ ] FastAPI 串接 PostgreSQL
 - [ ] 正式登入與權限管理
 - [ ] LINE Messaging API 每日提醒

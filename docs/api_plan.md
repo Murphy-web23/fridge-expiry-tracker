@@ -16,6 +16,7 @@ v9 讓 React 前端串接 FastAPI。v10 再加入家庭清單、採買金額與�
   "family_code": "demo-home",
   "name": "牛奶",
   "category": "乳製品",
+  "storage_location": "冰箱冷藏",
   "quantity": "1 瓶",
   "price": 95,
   "purchase_date": "2026-07-05",

@@ -6,6 +6,7 @@ from pydantic import BaseModel, Field
 class FoodCreate(BaseModel):
     name: str = Field(..., min_length=1)
     category: str = "其他"
+    storage_location: Literal["冰箱冷藏", "冷凍庫", "常溫儲藏", "飲品櫃"] = "冰箱冷藏"
     quantity: str = "未記錄"
     price: int = Field(default=0, ge=0)
     purchase_date: str | None = None
@@ -29,6 +30,7 @@ class FoodResponse(BaseModel):
     family_code: str
     name: str
     category: str
+    storage_location: str
     quantity: str
     price: int
     purchase_date: str | None

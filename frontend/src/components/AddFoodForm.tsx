@@ -1,6 +1,15 @@
-import { CalendarDays, CircleDollarSign, NotebookText, PackagePlus, ShoppingBasket } from "lucide-react";
+import { CalendarDays, CircleDollarSign, MapPin, NotebookText, PackagePlus, ShoppingBasket } from "lucide-react";
 import type { Dispatch, FormEvent, SetStateAction } from "react";
-import { addDays, categories, categoryMeta, foodPresets, quantityUnits } from "../constants";
+import {
+  addDays,
+  categories,
+  categoryMeta,
+  defaultStorageLocation,
+  foodPresets,
+  quantityUnits,
+  storageLocations,
+  storageMeta,
+} from "../constants";
 import type { FoodFormState } from "../types";
 import { inputClass, labelClass, primaryButtonClass, secondaryButtonClass } from "../ui";
 
@@ -42,6 +51,7 @@ export function AddFoodForm({
       preset: preset.name,
       name: preset.name,
       category: preset.category,
+      storageLocation: defaultStorageLocation(preset.category),
       quantityUnit: preset.unit,
     }));
   };
@@ -53,7 +63,7 @@ export function AddFoodForm({
           🧺
         </span>
         <p className="mt-7 text-xs font-semibold uppercase text-[#8BA888]">新增到 {familyName}</p>
-        <h3 className="mt-2 text-2xl font-bold text-[#3D3834]">把新鮮食材放進冰箱</h3>
+        <h3 className="mt-2 text-2xl font-bold text-[#3D3834]">新增家庭食材</h3>
         <p className="mt-4 text-sm leading-6 text-[#706B65]">
           目前操作者：<strong className="text-[#3D3834]">{currentMember}</strong>
         </p>
@@ -100,10 +110,39 @@ export function AddFoodForm({
 
         <label className={labelClass}>
           分類
-          <select className={inputClass} value={form.category} onChange={(event) => updateForm("category", event.target.value)}>
+          <select
+            className={inputClass}
+            value={form.category}
+            onChange={(event) => {
+              const category = event.target.value;
+              setForm((current) => ({
+                ...current,
+                category,
+                storageLocation: defaultStorageLocation(category),
+              }));
+            }}
+          >
             {categories.slice(1).map((category) => (
               <option key={category} value={category}>
                 {categoryMeta[category].emoji} {category}
+              </option>
+            ))}
+          </select>
+        </label>
+
+        <label className={labelClass}>
+          <span className="flex items-center gap-2">
+            <MapPin className="h-5 w-5 text-[#8BA888]" aria-hidden="true" />
+            儲存位置
+          </span>
+          <select
+            className={inputClass}
+            value={form.storageLocation}
+            onChange={(event) => updateForm("storageLocation", event.target.value as FoodFormState["storageLocation"])}
+          >
+            {storageLocations.map((location) => (
+              <option key={location} value={location}>
+                {storageMeta[location].emoji} {location}
               </option>
             ))}
           </select>
@@ -223,7 +262,7 @@ export function AddFoodForm({
 
         <button className={`${primaryButtonClass} sm:col-span-2`} type="submit" disabled={isSaving}>
           <PackagePlus className="h-5 w-5" aria-hidden="true" />
-          {isSaving ? "新增中..." : "加入冰箱"}
+          {isSaving ? "新增中..." : "新增食材"}
         </button>
       </form>
     </section>

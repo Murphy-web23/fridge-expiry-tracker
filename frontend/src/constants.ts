@@ -1,8 +1,24 @@
-import type { FoodFormState, FoodStatusLabel, PageKey } from "./types";
+import type { FoodFormState, FoodStatusLabel, PageKey, StorageLocation } from "./types";
 
 export const categories = ["全部", "蔬菜", "水果", "肉類", "海鮮", "乳製品", "冷凍食品", "飲料", "調味料", "其他"];
 
 export const quantityUnits = ["個", "盒", "包", "瓶", "袋", "罐", "條", "份", "箱", "顆", "把", "根", "隻", "片", "kg", "g", "L", "ml", "塊"];
+
+export const storageLocations: StorageLocation[] = ["冰箱冷藏", "冷凍庫", "常溫儲藏", "飲品櫃"];
+
+export const storageMeta: Record<StorageLocation, { emoji: string; description: string }> = {
+  冰箱冷藏: { emoji: "❄️", description: "蔬果、乳製品與冷藏食材" },
+  冷凍庫: { emoji: "🧊", description: "冷凍食品與長期保存食材" },
+  常溫儲藏: { emoji: "🏠", description: "乾貨、調味料與常溫食品" },
+  飲品櫃: { emoji: "🧃", description: "飲料、酒水與沖泡飲品" },
+};
+
+export function defaultStorageLocation(category: string): StorageLocation {
+  if (category === "冷凍食品") return "冷凍庫";
+  if (category === "飲料") return "飲品櫃";
+  if (category === "調味料") return "常溫儲藏";
+  return "冰箱冷藏";
+}
 
 export const foodPresets = [
   { name: "青江菜", category: "蔬菜", unit: "把" },
@@ -95,6 +111,7 @@ export function createInitialFoodForm(): FoodFormState {
     preset: "",
     name: "",
     category: "蔬菜",
+    storageLocation: "冰箱冷藏",
     quantityAmount: "1",
     quantityUnit: "盒",
     price: "",

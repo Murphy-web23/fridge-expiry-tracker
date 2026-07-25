@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import { CalendarClock, CircleDollarSign, Clock3, ShoppingBasket, TriangleAlert } from "lucide-react";
-import { formatPrice } from "../constants";
-import type { DashboardStats, Food } from "../types";
+import { formatPrice, storageLocations, storageMeta } from "../constants";
+import type { DashboardStats, Food, StorageLocation } from "../types";
 import { EmptyState } from "./Shell";
 import { FoodCard } from "./FoodCard";
 
@@ -76,6 +76,18 @@ export function Dashboard({ stats, foods, onMarkUsed, onAdjustQuantity }: Dashbo
   const expired = activeFoods.filter((food) => food.daysLeft < 0);
   const today = activeFoods.filter((food) => food.daysLeft === 0);
   const soon = activeFoods.filter((food) => food.daysLeft > 0 && food.daysLeft <= 7);
+  const storageCounts = activeFoods.reduce<Record<StorageLocation, number>>(
+    (counts, food) => {
+      counts[food.storageLocation] += 1;
+      return counts;
+    },
+    {
+      冰箱冷藏: 0,
+      冷凍庫: 0,
+      常溫儲藏: 0,
+      飲品櫃: 0,
+    },
+  );
 
   return (
     <div className="grid gap-8">
@@ -91,6 +103,42 @@ export function Dashboard({ stats, foods, onMarkUsed, onAdjustQuantity }: Dashbo
           icon={CircleDollarSign}
           surface="bg-[#F1F6EF]"
         />
+      </section>
+
+      <section aria-labelledby="storage-overview-title">
+        <div className="mb-4 flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <p className="text-sm font-semibold text-[#8BA888]">家庭食材放在哪裡</p>
+            <h3 id="storage-overview-title" className="mt-1 text-xl font-bold text-[#3D3834]">
+              儲存空間分區快覽
+            </h3>
+          </div>
+          <p className="text-sm font-semibold text-[#706B65]">在庫食材共計 {activeFoods.length} 項</p>
+        </div>
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          {storageLocations.map((location) => (
+            <article
+              key={location}
+              className="flex min-h-28 items-center justify-between gap-4 rounded-3xl border border-[#E8E4DE] bg-white/80 px-5 py-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+            >
+              <div className="flex min-w-0 items-center gap-3">
+                <span
+                  className="grid h-12 w-12 shrink-0 place-items-center rounded-2xl bg-[#F9F7F2] text-2xl"
+                  aria-hidden="true"
+                >
+                  {storageMeta[location].emoji}
+                </span>
+                <div className="min-w-0">
+                  <h4 className="font-bold text-[#3D3834]">{location}</h4>
+                  <p className="mt-1 line-clamp-1 text-xs text-[#706B65]">{storageMeta[location].description}</p>
+                </div>
+              </div>
+              <strong className="whitespace-nowrap text-lg font-bold text-[#8BA888]">
+                {storageCounts[location]} 項
+              </strong>
+            </article>
+          ))}
+        </div>
       </section>
 
       <section className="flex flex-col justify-between gap-5 rounded-3xl border border-[#E8E4DE] bg-[#F9F7F2] p-6 sm:flex-row sm:items-center">

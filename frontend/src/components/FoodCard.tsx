@@ -1,5 +1,5 @@
 import { Check, Minus, NotebookText, Plus } from "lucide-react";
-import { categoryMeta, formatPrice, shortNote, statusMeta } from "../constants";
+import { categoryMeta, formatPrice, shortNote, statusMeta, storageMeta } from "../constants";
 import type { Food } from "../types";
 
 interface FoodCardProps {
@@ -30,6 +30,9 @@ export function FoodCard({ food, onMarkUsed, onAdjustQuantity }: FoodCardProps) 
             <h3 className="text-lg font-bold text-[#3D3834]">{food.name}</h3>
             <p className="mt-1 text-sm text-[#706B65]">
               {food.category} ・ {food.quantity}
+            </p>
+            <p className="mt-1 text-xs font-medium text-[#706B65]">
+              {storageMeta[food.storageLocation].emoji} {food.storageLocation}
             </p>
           </div>
         </div>
