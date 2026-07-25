@@ -64,28 +64,30 @@ v10 在 React 與 FastAPI 串接基礎上，新增採買金額、常用食材與
 
 ## Demo Screenshots
 
-以下截圖對應 v7 前端展示版。v10.1 已完成表單、卡片與圖示視覺更新，待部署確認後會再補上新版截圖。
-版本紀錄保留在 `assets/screenshots/`，各版本資料夾也有 `version_notes.txt` 記錄版本演進。
+以下截圖對應 v10.1 React 前端版，展示期限管理、金額統計、快速新增與家庭操作介面。
+舊版截圖仍保留在 `assets/screenshots/`，可回顧專案從 Streamlit 原型到 React 介面的版本演進。
 
-### v7 Dashboard 統計
+### v10.1 Dashboard
 
-![v7 Dashboard 統計畫面](assets/screenshots/v7/dashboard_top.png)
+![v10.1 Dashboard 畫面](assets/screenshots/v10.1/dashboard.png)
 
-### v7 Dashboard 分區提醒
+### v10.1 食材清單
 
-![v7 Dashboard 分區提醒畫面](assets/screenshots/v7/dashboard_sections.png)
+![v10.1 食材清單畫面](assets/screenshots/v10.1/food_list.png)
 
-### v7 食材清單
+### v10.1 消費統計
 
-![v7 食材清單畫面](assets/screenshots/v7/food_list.png)
+![v10.1 消費統計摘要](assets/screenshots/v10.1/spending_summary.png)
 
-### v7 新增食材
+![v10.1 消費統計明細](assets/screenshots/v10.1/spending_details.png)
 
-![v7 新增食材畫面](assets/screenshots/v7/add_food.png)
+### v10.1 新增食材
 
-### v7 家庭管理
+![v10.1 新增食材畫面](assets/screenshots/v10.1/add_food.png)
 
-![v7 家庭管理畫面](assets/screenshots/v7/family_management.png)
+### v10.1 家庭管理
+
+![v10.1 家庭管理畫面](assets/screenshots/v10.1/family_management.png)
 
 ## 使用技術
 
@@ -259,7 +261,15 @@ fridge-expiry-tracker/
         │   └── version_notes.txt
         ├── v9/
         │   └── version_notes.txt
-        └── v10/
+        ├── v10/
+        │   └── version_notes.txt
+        └── v10.1/
+            ├── add_food.png
+            ├── dashboard.png
+            ├── family_management.png
+            ├── food_list.png
+            ├── spending_details.png
+            ├── spending_summary.png
             └── version_notes.txt
 ```
 
