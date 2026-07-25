@@ -139,6 +139,11 @@ export default function App() {
       setErrorMessage("請選擇常用食材，或輸入自訂食材名稱。");
       return;
     }
+    const quantityAmount = Number(form.quantityAmount);
+    if (!Number.isInteger(quantityAmount) || quantityAmount < 1) {
+      setErrorMessage("食材數量請輸入大於零的整數。");
+      return;
+    }
     if (form.expiryDate < form.purchaseDate) {
       setErrorMessage("到期日期不能早於購買日期。");
       return;
@@ -151,7 +156,7 @@ export default function App() {
         {
           name: form.name.trim(),
           category: form.category,
-          quantity: `${form.quantityAmount || 1} ${form.quantityUnit}`,
+          quantity: `${quantityAmount} ${form.quantityUnit}`,
           price: Number(form.price) || 0,
           purchase_date: form.purchaseDate,
           expiry_date: form.expiryDate,

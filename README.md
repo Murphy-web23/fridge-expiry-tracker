@@ -32,6 +32,7 @@ v11 將 React 前端完整改寫為 TypeScript，導入 Tailwind CSS 與 Rechart
 - 記錄食材購買金額，Dashboard 顯示冰箱食材總金額
 - 使用常用食材下拉選單，自動帶入分類與建議單位
 - 數量與單位分開選擇，減少重複輸入
+- 新增食材數量限制為大於零的整數，避免不適用的小數數量
 - 使用期限快速按鈕設定 3、7、14、30 或 180 天後到期
 - 可從側邊欄直接切換目前家庭與操作者
 - 食材卡片可直接增加或減少一個單位
@@ -66,30 +67,30 @@ v11 將 React 前端完整改寫為 TypeScript，導入 Tailwind CSS 與 Rechart
 
 ## Demo Screenshots
 
-以下截圖目前保留 v10.1 React 前端版，展示期限管理、金額統計、快速新增與家庭操作介面。v11 完成實機驗收後會補上新版截圖。
+以下截圖對應 v11 React TypeScript 前端版，展示 Natural Warm Organic 設計系統、期限管理、金額統計、快速新增與家庭操作介面。
 舊版截圖仍保留在 `assets/screenshots/`，可回顧專案從 Streamlit 原型到 React 介面的版本演進。
 
-### v10.1 Dashboard
+### v11 Dashboard
 
-![v10.1 Dashboard 畫面](assets/screenshots/v10.1/dashboard.png)
+![v11 Dashboard 統計與過期食材](assets/screenshots/v11/dashboard_top.png)
 
-### v10.1 食材清單
+![v11 Dashboard 今天與七天內到期食材](assets/screenshots/v11/dashboard_sections.png)
 
-![v10.1 食材清單畫面](assets/screenshots/v10.1/food_list.png)
+### v11 食材清單
 
-### v10.1 消費統計
+![v11 食材清單畫面](assets/screenshots/v11/food_list.png)
 
-![v10.1 消費統計摘要](assets/screenshots/v10.1/spending_summary.png)
+### v11 消費統計
 
-![v10.1 消費統計明細](assets/screenshots/v10.1/spending_details.png)
+![v11 消費統計畫面](assets/screenshots/v11/spending.png)
 
-### v10.1 新增食材
+### v11 新增食材
 
-![v10.1 新增食材畫面](assets/screenshots/v10.1/add_food.png)
+![v11 新增食材畫面](assets/screenshots/v11/add_food.png)
 
-### v10.1 家庭管理
+### v11 家庭管理
 
-![v10.1 家庭管理畫面](assets/screenshots/v10.1/family_management.png)
+![v11 家庭管理畫面](assets/screenshots/v11/family_management.png)
 
 ## 使用技術
 
@@ -294,6 +295,12 @@ fridge-expiry-tracker/
         ├── v10.2/
         │   └── version_notes.txt
         └── v11/
+            ├── add_food.png
+            ├── dashboard_sections.png
+            ├── dashboard_top.png
+            ├── family_management.png
+            ├── food_list.png
+            ├── spending.png
             └── version_notes.txt
 ```
 
@@ -492,6 +499,7 @@ expiry_date - today
 - 顯示分類占比、消費排行與採買明細
 - 提醒未填金額資料
 - 常用食材、數量單位與期限快速選取
+- 新增食材數量正整數驗證
 - 切換家庭與目前操作者
 - 使用卡片按鈕增加或減少數量
 - 顯示簡短備註

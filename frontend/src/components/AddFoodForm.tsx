@@ -118,11 +118,16 @@ export function AddFoodForm({
             <input
               className={inputClass}
               type="number"
-              min="0.1"
-              step="0.1"
-              inputMode="decimal"
+              min="1"
+              step="1"
+              inputMode="numeric"
               value={form.quantityAmount}
-              onChange={(event) => updateForm("quantityAmount", event.target.value)}
+              onChange={(event) => {
+                const nextValue = event.target.value;
+                if (nextValue === "" || /^\d+$/.test(nextValue)) {
+                  updateForm("quantityAmount", nextValue);
+                }
+              }}
               aria-label="數量"
               required
             />
