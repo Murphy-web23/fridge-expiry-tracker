@@ -1,0 +1,258 @@
+import { useCallback, useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  adjustFoodQuantity,
+  apiConfig,
+  createFood,
+  getFamilies,
+  getFamily,
+  getFoods,
+  getMembers,
+  markFoodUsed,
+} from "./api";
+import { createInitialFoodForm } from "./constants";
+import { AddFoodForm } from "./components/AddFoodForm";
+import { Dashboard } from "./components/Dashboard";
+import { FamilyPanel } from "./components/FamilyPanel";
+import { FoodList } from "./components/FoodList";
+import {
+  ApiNotice,
+  Header,
+  MobileFamilySwitcher,
+  Sidebar,
+} from "./components/Shell";
+import { SpendingPanel } from "./components/SpendingPanel";
+import type {
+  ApiFood,
+  DashboardStats,
+  Family,
+  Food,
+  FoodFormState,
+  Member,
+  PageKey,
+} from "./types";
+
+function normalizeFood(food: ApiFood): Food {
+  return {
+    id: food.id,
+    name: food.name,
+    category: food.category,
+    quantity: food.quantity,
+    price: Number(food.price) || 0,
+    purchaseDate: food.purchase_date || "",
+    expiryDate: food.expiry_date,
+    daysLeft: food.days_left,
+    status: food.status_label,
+    addedBy: food.added_by,
+    updatedBy: food.updated_by || "未記錄",
+    note: food.note || "未記錄",
+  };
+}
+
+export default function App() {
+  const [activePage, setActivePage] = useState<PageKey>("dashboard");
+  const [foods, setFoods] = useState<Food[]>([]);
+  const [family, setFamily] = useState<Family | null>(null);
+  const [families, setFamilies] = useState<Family[]>([]);
+  const [members, setMembers] = useState<Member[]>([]);
+  const [familyCode, setFamilyCode] = useState(apiConfig.familyCode);
+  const [currentMember, setCurrentMember] = useState(apiConfig.memberName);
+  const [filter, setFilter] = useState("全部");
+  const [sortMode, setSortMode] = useState("urgent");
+  const [search, setSearch] = useState("");
+  const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
+  const [form, setForm] = useState<FoodFormState>(createInitialFoodForm);
+
+  useEffect(() => {
+    async function loadFamilyOptions() {
+      try {
+        const options = await getFamilies();
+        setFamilies(options);
+        if (options.length > 0 && !options.some((item) => item.family_code === familyCode)) {
+          setFamilyCode(options[0].family_code);
+        }
+      } catch {
+        setErrorMessage("目前無法取得家庭清單，請確認 FastAPI 後端是否正在執行。");
+      }
+    }
+
+    void loadFamilyOptions();
+  }, [familyCode]);
+
+  const loadFamilyData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      setErrorMessage("");
+      const [familyData, memberData, foodData] = await Promise.all([
+        getFamily(familyCode),
+        getMembers(familyCode),
+        getFoods(familyCode),
+      ]);
+      setFamily(familyData);
+      setMembers(memberData);
+      setCurrentMember((current) => {
+        const stillExists = memberData.some((member) => member.member_name === current);
+        return stillExists ? current : memberData[0]?.member_name || apiConfig.memberName;
+      });
+      setFoods(foodData.map(normalizeFood));
+    } catch {
+      setErrorMessage("目前無法連線到 FastAPI，請先啟動後端服務。");
+    } finally {
+      setIsLoading(false);
+    }
+  }, [familyCode]);
+
+  useEffect(() => {
+    void loadFamilyData();
+  }, [loadFamilyData]);
+
+  const stats = useMemo<DashboardStats>(() => {
+    const activeFoods = foods.filter((food) => food.status !== "Used");
+    return {
+      total: activeFoods.length,
+      expired: activeFoods.filter((food) => food.daysLeft < 0).length,
+      today: activeFoods.filter((food) => food.daysLeft === 0).length,
+      soon: activeFoods.filter((food) => food.daysLeft > 0 && food.daysLeft <= 7).length,
+      totalValue: activeFoods.reduce((sum, food) => sum + food.price, 0),
+    };
+  }, [foods]);
+
+  const filteredFoods = useMemo(() => {
+    const query = search.trim().toLocaleLowerCase("zh-Hant");
+    const result = foods.filter((food) => {
+      const matchesCategory = filter === "全部" || food.category === filter;
+      const matchesSearch = food.name.toLocaleLowerCase("zh-Hant").includes(query);
+      return matchesCategory && matchesSearch;
+    });
+
+    return [...result].sort((a, b) => {
+      if (sortMode === "category") return a.category.localeCompare(b.category, "zh-Hant");
+      if (sortMode === "safe") return b.daysLeft - a.daysLeft;
+      return a.daysLeft - b.daysLeft;
+    });
+  }, [filter, foods, search, sortMode]);
+
+  async function handleAddFood(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (!form.name.trim()) {
+      setErrorMessage("請選擇常用食材，或輸入自訂食材名稱。");
+      return;
+    }
+    if (form.expiryDate < form.purchaseDate) {
+      setErrorMessage("到期日期不能早於購買日期。");
+      return;
+    }
+
+    try {
+      setIsSaving(true);
+      setErrorMessage("");
+      const createdFood = await createFood(
+        {
+          name: form.name.trim(),
+          category: form.category,
+          quantity: `${form.quantityAmount || 1} ${form.quantityUnit}`,
+          price: Number(form.price) || 0,
+          purchase_date: form.purchaseDate,
+          expiry_date: form.expiryDate,
+          note: form.note.trim() || "未記錄",
+        },
+        familyCode,
+        currentMember,
+      );
+      setFoods((current) => [normalizeFood(createdFood), ...current]);
+      setForm(createInitialFoodForm());
+      setActivePage("foods");
+    } catch {
+      setErrorMessage("新增食材失敗，請確認 FastAPI 與資料庫連線狀態。");
+    } finally {
+      setIsSaving(false);
+    }
+  }
+
+  async function handleMarkUsed(id: number) {
+    try {
+      setErrorMessage("");
+      const updatedFood = await markFoodUsed(id, familyCode, currentMember);
+      setFoods((current) => current.map((food) => (food.id === id ? normalizeFood(updatedFood) : food)));
+    } catch {
+      setErrorMessage("標記已使用失敗，請稍後再試。");
+    }
+  }
+
+  async function handleAdjustQuantity(id: number, delta: -1 | 1) {
+    try {
+      setErrorMessage("");
+      const updatedFood = await adjustFoodQuantity(id, delta, familyCode, currentMember);
+      setFoods((current) => current.map((food) => (food.id === id ? normalizeFood(updatedFood) : food)));
+    } catch {
+      setErrorMessage("更新數量失敗，數量不可低於零。");
+    }
+  }
+
+  const familyName = family?.family_name || familyCode;
+  const memberNames = members.map((member) => member.member_name).join("、") || "尚未加入成員";
+  const selectorProps = {
+    families,
+    members,
+    familyCode,
+    currentMember,
+    setFamilyCode,
+    setCurrentMember,
+  };
+
+  return (
+    <div className="min-h-screen bg-[#FDFCF9] text-[#3D3834] lg:grid lg:grid-cols-[280px_minmax(0,1fr)]">
+      <Sidebar
+        {...selectorProps}
+        activePage={activePage}
+        onPageChange={setActivePage}
+        memberNames={memberNames}
+      />
+
+      <div className="min-w-0">
+        <Header activePage={activePage} onPageChange={setActivePage} onAdd={() => setActivePage("add")} />
+        <main className="mx-auto max-w-[1600px] px-4 py-6 sm:px-6 lg:px-8 lg:py-8">
+          <MobileFamilySwitcher {...selectorProps} />
+          <ApiNotice isLoading={isLoading} errorMessage={errorMessage} onRetry={() => void loadFamilyData()} />
+
+          {activePage === "dashboard" && (
+            <Dashboard
+              stats={stats}
+              foods={foods}
+              onMarkUsed={handleMarkUsed}
+              onAdjustQuantity={handleAdjustQuantity}
+            />
+          )}
+          {activePage === "foods" && (
+            <FoodList
+              foods={filteredFoods}
+              filter={filter}
+              setFilter={setFilter}
+              sortMode={sortMode}
+              setSortMode={setSortMode}
+              search={search}
+              setSearch={setSearch}
+              onMarkUsed={handleMarkUsed}
+              onAdjustQuantity={handleAdjustQuantity}
+            />
+          )}
+          {activePage === "spending" && <SpendingPanel foods={foods} familyName={familyName} />}
+          {activePage === "add" && (
+            <AddFoodForm
+              form={form}
+              setForm={setForm}
+              onSubmit={handleAddFood}
+              isSaving={isSaving}
+              familyName={familyName}
+              currentMember={currentMember}
+            />
+          )}
+          {activePage === "family" && (
+            <FamilyPanel family={family} members={members} currentMember={currentMember} />
+          )}
+        </main>
+      </div>
+    </div>
+  );
+}

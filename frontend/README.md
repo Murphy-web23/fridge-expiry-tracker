@@ -1,6 +1,6 @@
 # 食材期限管理工具前端版
 
-這是 React / Vite 前端版本。v9 開始串接 FastAPI，v10 新增採買金額與更方便的家庭冰箱操作，v10.1 使用 Lucide React 補上操作圖示，v10.2 改為更明亮的生活風格並加入彩色 emoji。
+這是 React / TypeScript / Vite 前端版本。v11 使用 Tailwind CSS 建立 Natural Warm Organic 設計系統，搭配 Lucide React 圖示、分類 emoji 與 Recharts 消費圖表，並持續串接既有 FastAPI。
 
 目前重點：
 
@@ -19,6 +19,10 @@
 - 類別支出占比、消費排行與逐筆採買明細
 - 未填金額完整度提醒
 - 家庭管理資料顯示
+- TypeScript 型別保護
+- Tailwind CSS 共用設計規範
+- Recharts 圓餅圖與類別排行
+- 桌面與手機響應式排版
 
 ## 執行方式
 
@@ -37,6 +41,13 @@ npm install
 npm run dev
 ```
 
+型別與正式版建置檢查：
+
+```bash
+npm run typecheck
+npm run build
+```
+
 前端預設會呼叫：
 
 ```text
@@ -49,4 +60,4 @@ http://127.0.0.1:8008
 VITE_API_BASE_URL=http://127.0.0.1:8008
 ```
 
-v10 後端仍使用記憶體 mock data，重啟 FastAPI 後會回到預設資料。
+目前後端仍使用記憶體 mock data，重啟 FastAPI 後會回到預設資料。

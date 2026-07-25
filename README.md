@@ -2,9 +2,9 @@
 
 Repository name: `fridge-expiry-tracker`
 
-一個使用 Python、Streamlit、SQLite、PostgreSQL、React 與 FastAPI 製作的食材期限管理工具。使用者可以新增冰箱裡的食材、設定到期日期，系統會自動計算剩餘天數，並標示即將過期、今天到期、已過期與已使用的食材。
+一個使用 Python、Streamlit、SQLite、PostgreSQL、React、TypeScript 與 FastAPI 製作的食材期限管理工具。使用者可以新增冰箱裡的食材、設定到期日期，系統會自動計算剩餘天數，並標示即將過期、今天到期、已過期與已使用的食材。
 
-v10 在 React 與 FastAPI 串接基礎上，新增採買金額、常用食材與單位快速選取、期限快速設定、家庭與操作者切換，以及卡片數量加減。v10.1 加入一致的介面圖示，v10.2 再以米白底、輕陰影、柔和色彩與彩色 emoji 降低工具感，讓家庭成員使用時更輕鬆。
+v11 將 React 前端完整改寫為 TypeScript，導入 Tailwind CSS 與 Recharts，並建立「大地自然質感」設計系統。介面以柔軟奶白、鼠尾草綠、陶土赭紅與燕麥色呈現，搭配圓潤元件、Lucide 圖示與分類 emoji，保留原有 FastAPI 資料流程並改善桌面與手機操作體驗。
 
 ## 專案動機
 
@@ -61,11 +61,12 @@ v10 在 React 與 FastAPI 串接基礎上，新增採買金額、常用食材與
 - v10 新增消費統計頁，可查看期間金額、分類分析與採買明細
 - v10.1 使用 Lucide 圖示統一導覽、操作與狀態語言，並加入分類圖示與友善空狀態
 - v10.2 改用明亮側欄、純色背景、輕陰影與彩色 emoji，提升生活感與資訊辨識度
+- v11 改用 React TypeScript、Tailwind CSS 與 Recharts，建立可重用的自然暖色設計系統與響應式元件
 - 繁體中文介面，適合作為初學者作品集專案
 
 ## Demo Screenshots
 
-以下截圖對應 v10.1 React 前端版，展示期限管理、金額統計、快速新增與家庭操作介面。
+以下截圖目前保留 v10.1 React 前端版，展示期限管理、金額統計、快速新增與家庭操作介面。v11 完成實機驗收後會補上新版截圖。
 舊版截圖仍保留在 `assets/screenshots/`，可回顧專案從 Streamlit 原型到 React 介面的版本演進。
 
 ### v10.1 Dashboard
@@ -99,25 +100,27 @@ v10 在 React 與 FastAPI 串接基礎上，新增採買金額、常用食材與
 - PostgreSQL
 - psycopg2
 - React
+- TypeScript
 - Vite
-- CSS
+- Tailwind CSS
 - Lucide React
+- Recharts
 - FastAPI
 - Uvicorn
 
-## v10 專案架構定位
+## v11 專案架構定位
 
 目前專案分成三個層次：
 
 - `app.py`：Streamlit 可操作資料工具版，負責驗證資料流程與 PostgreSQL 保存。
-- `frontend/`：React / Vite 前端版，提供快速新增、家庭切換、金額與數量操作。
+- `frontend/`：React / TypeScript / Tailwind CSS 前端版，提供快速新增、家庭切換、金額、數量操作與 Recharts 消費圖表。
 - `backend/`：FastAPI 後端雛形，先用 mock data 提供家庭、食材與操作 API，後續再接 PostgreSQL。
 
-v10 的重點不是取代 Streamlit，而是讓 React 與 FastAPI 的資料流更接近家庭日常會使用的操作方式。
+v11 的重點不是取代 Streamlit，而是用可維護的型別、共用元件與一致設計語言，讓 React 與 FastAPI 的資料流更接近家庭日常會使用的操作方式。
 
-## v10 前端操作版
+## v11 前端操作版
 
-目前這個 repo 仍保留 Streamlit 資料工具版本。React 前端呼叫 FastAPI，v10 再補上金額與快速操作。
+目前這個 repo 仍保留 Streamlit 資料工具版本。React 前端呼叫 FastAPI，v11 將既有功能整理成 TypeScript 元件並完成自然暖色視覺重構。
 
 前端串接版目前包含：
 
@@ -173,6 +176,7 @@ npm run dev
 | v10 | 新增採買金額、快速新增、家庭與操作者切換、數量加減、簡短備註與消費統計 |
 | v10.1 | 加入分類、期限狀態、導覽與操作圖示，優化空狀態、新增表單與整體視覺層次 |
 | v10.2 | 將深色工具介面改為輕盈生活風格，加入分類、狀態、統計與成員 emoji |
+| v11 | React 前端改寫為 TypeScript，導入 Tailwind CSS、Recharts 與 Natural Warm Organic 設計系統 |
 
 ## 專案架構
 
@@ -203,12 +207,26 @@ fridge-expiry-tracker/
 │   ├── index.html
 │   ├── package-lock.json
 │   ├── package.json
+│   ├── tsconfig.json
+│   ├── vite.config.ts
 │   ├── .env.example
 │   ├── README.md
 │   └── src/
-│       ├── api.js
-│       ├── main.jsx
-│       └── styles.css
+│       ├── components/
+│       │   ├── AddFoodForm.tsx
+│       │   ├── Dashboard.tsx
+│       │   ├── FamilyPanel.tsx
+│       │   ├── FoodCard.tsx
+│       │   ├── FoodList.tsx
+│       │   ├── Shell.tsx
+│       │   └── SpendingPanel.tsx
+│       ├── App.tsx
+│       ├── api.ts
+│       ├── constants.ts
+│       ├── index.css
+│       ├── main.tsx
+│       ├── types.ts
+│       └── ui.ts
 ├── src/
 │   ├── __init__.py
 │   ├── database.py
@@ -265,13 +283,17 @@ fridge-expiry-tracker/
         │   └── version_notes.txt
         ├── v10/
         │   └── version_notes.txt
-        └── v10.1/
-            ├── add_food.png
-            ├── dashboard.png
-            ├── family_management.png
-            ├── food_list.png
-            ├── spending_details.png
-            ├── spending_summary.png
+        ├── v10.1/
+        │   ├── add_food.png
+        │   ├── dashboard.png
+        │   ├── family_management.png
+        │   ├── food_list.png
+        │   ├── spending_details.png
+        │   ├── spending_summary.png
+        │   └── version_notes.txt
+        ├── v10.2/
+        │   └── version_notes.txt
+        └── v11/
             └── version_notes.txt
 ```
 
@@ -325,7 +347,7 @@ http://127.0.0.1:8008
 
 如需調整，可參考 `frontend/.env.example` 設定 `VITE_API_BASE_URL`。
 
-v10 後端仍使用記憶體 mock data，重新啟動 FastAPI 後會回到預設資料。後續版本會再接 PostgreSQL。
+目前 FastAPI 後端仍使用記憶體 mock data，重新啟動 FastAPI 後會回到預設資料。後續版本會再接 PostgreSQL。
 
 ## FastAPI 後端執行方式
 
@@ -353,7 +375,7 @@ uvicorn app.main:app --reload --port 8008
 http://127.0.0.1:8008/docs
 ```
 
-v10 後端目前使用 mock data，重啟服務後會回到預設資料。後續版本會再接 PostgreSQL。
+目前 FastAPI 後端使用 mock data，重啟服務後會回到預設資料。後續版本會再接 PostgreSQL。
 
 ## Streamlit Cloud 資料庫設定
 
@@ -493,7 +515,7 @@ expiry_date - today
 - 公開部署時，請不要輸入敏感或真實個資。
 - 日期需要手動輸入，尚未支援 OCR 辨識包裝日期。
 - 尚未加入通知功能，因此需要使用者主動開啟 App 查看。
-- v10 React 前端已可串接 FastAPI，但 FastAPI 目前仍使用 mock data，尚未連接 PostgreSQL。
+- v11 React 前端已可串接 FastAPI，但 FastAPI 目前仍使用 mock data，尚未連接 PostgreSQL。
 - 家庭與操作者切換目前是展示用選擇，尚未加入帳號驗證與權限控管。
 
 ## Roadmap
@@ -525,6 +547,10 @@ expiry_date - today
 - [x] 本週 / 本月 / 全部消費統計
 - [x] 類別支出占比與消費排行
 - [x] 逐筆採買明細與未填金額提醒
+- [x] React TypeScript 型別重構
+- [x] Tailwind CSS 自然暖色設計系統
+- [x] Recharts 消費圖表
+- [x] 桌面與手機響應式介面
 - [ ] FastAPI 串接 PostgreSQL
 - [ ] 正式登入與權限管理
 - [ ] LINE Messaging API 每日提醒
