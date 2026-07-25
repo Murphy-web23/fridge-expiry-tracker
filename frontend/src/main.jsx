@@ -2,37 +2,24 @@ import React, { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import {
   AlertTriangle,
-  Apple,
   ArrowUpDown,
   BarChart3,
-  Beef,
   CalendarClock,
   CalendarDays,
   Check,
   CheckCircle2,
   CircleDollarSign,
-  Clock3,
-  CookingPot,
-  CupSoda,
-  Fish,
   House,
   Leaf,
   ListChecks,
-  Milk,
   Minus,
   NotebookText,
-  Package,
   Plus,
   ReceiptText,
   RefreshCw,
   Search,
   ShieldCheck,
-  ShoppingBasket,
-  Snowflake,
-  Sparkles,
-  UserRound,
   UsersRound,
-  WalletCards,
 } from "lucide-react";
 import {
   adjustFoodQuantity,
@@ -94,28 +81,36 @@ const categoryColors = {
   調味料: "#8c7853",
   其他: "#7a8790",
 };
-const categoryIcons = {
-  蔬菜: Leaf,
-  水果: Apple,
-  肉類: Beef,
-  海鮮: Fish,
-  乳製品: Milk,
-  冷凍食品: Snowflake,
-  飲料: CupSoda,
-  調味料: CookingPot,
-  其他: Package,
+const categoryEmoji = {
+  蔬菜: "🥬",
+  水果: "🍎",
+  肉類: "🥩",
+  海鮮: "🐟",
+  乳製品: "🥛",
+  冷凍食品: "🧊",
+  飲料: "🧃",
+  調味料: "🧂",
+  其他: "📦",
 };
-const statusIcons = {
-  Expired: AlertTriangle,
-  Today: Clock3,
-  Soon: CalendarClock,
-  Safe: ShieldCheck,
-  Used: CheckCircle2,
+const statusEmoji = {
+  Expired: "⚠️",
+  Today: "⏰",
+  Soon: "✨",
+  Safe: "🌿",
+  Used: "✅",
+};
+const pageMeta = {
+  dashboard: { title: "家庭冰箱總覽", emoji: "🏡" },
+  foods: { title: "食材清單", emoji: "🧺" },
+  spending: { title: "消費統計", emoji: "💰" },
+  add: { title: "新增食材", emoji: "🛒" },
+  family: { title: "家庭管理", emoji: "👨‍👩‍👧‍👦" },
 };
 
-function CategoryIcon({ category, size = 24 }) {
-  const Icon = categoryIcons[category] || Package;
-  return <Icon size={size} strokeWidth={2.2} aria-hidden="true" />;
+function memberEmoji(memberName, role) {
+  if (role === "admin") return "🧑‍🍳";
+  if (memberName === "訪客") return "🙂";
+  return "🙋";
 }
 
 function todayText() {
@@ -312,7 +307,7 @@ function App() {
       <aside className="sidebar">
         <div className="brand-block">
           <span className="brand-mark" aria-hidden="true">
-            <Snowflake size={27} strokeWidth={2.4} />
+            🧊
           </span>
           <div>
             <p className="eyebrow">Fridge Tracker</p>
@@ -373,8 +368,8 @@ function App() {
       <main className="main-content">
         <header className="topbar">
           <div>
-            <p className="eyebrow"><Sparkles size={15} aria-hidden="true" />v10.1 療癒視覺版</p>
-            <h2>{activePage === "dashboard" ? "家庭冰箱 Dashboard" : pageTitle(activePage)}</h2>
+            <p className="eyebrow"><span aria-hidden="true">🌱</span>v10.2 輕盈生活版</p>
+            <h2><span className="page-title-emoji" aria-hidden="true">{pageMeta[activePage].emoji}</span>{pageMeta[activePage].title}</h2>
           </div>
           <button className="primary-action" onClick={() => setActivePage("add")}>
             <Plus size={19} aria-hidden="true" />
@@ -417,13 +412,6 @@ function App() {
   );
 }
 
-function pageTitle(page) {
-  if (page === "foods") return "食材清單";
-  if (page === "spending") return "消費統計";
-  if (page === "add") return "新增食材";
-  return "家庭管理";
-}
-
 function ApiNotice({ isLoading, errorMessage, onRetry }) {
   if (isLoading) {
     return <div className="api-notice"><RefreshCw className="spin" size={18} aria-hidden="true" />正在載入家庭冰箱資料...</div>;
@@ -454,19 +442,19 @@ function Dashboard({ stats, foods, onMarkUsed, onAdjustQuantity }) {
   return (
     <div className="page-grid">
       <section className="stats-grid">
-        <StatCard label="總食材數" value={stats.total} tone="neutral" icon={ShoppingBasket} />
-        <StatCard label="已過期" value={stats.expired} tone="danger" icon={AlertTriangle} />
-        <StatCard label="今天到期" value={stats.today} tone="warning" icon={Clock3} />
-        <StatCard label="7 天內到期" value={stats.soon} tone="info" icon={CalendarClock} />
-        <StatCard label="冰箱食材金額" value={formatPrice(stats.totalValue)} tone="money" compact icon={WalletCards} />
+        <StatCard label="總食材數" value={stats.total} tone="neutral" emoji="🧺" />
+        <StatCard label="已過期" value={stats.expired} tone="danger" emoji="🥀" />
+        <StatCard label="今天到期" value={stats.today} tone="warning" emoji="⏰" />
+        <StatCard label="7 天內到期" value={stats.soon} tone="info" emoji="📅" />
+        <StatCard label="冰箱食材金額" value={formatPrice(stats.totalValue)} tone="money" compact emoji="💰" />
       </section>
 
       <section className="dashboard-band">
         <div className="dashboard-band-title">
-          <span className="soft-icon"><Sparkles size={22} aria-hidden="true" /></span>
+          <span className="soft-icon" aria-hidden="true">🌼</span>
           <div>
             <p className="eyebrow">需要優先處理</p>
-            <h3>今天也一起把冰箱照顧好</h3>
+            <h3>今天也輕鬆把冰箱照顧好</h3>
           </div>
         </div>
         <p>期限、採買金額與簡短備註集中顯示，打開頁面就能掌握冰箱現況。</p>
@@ -497,12 +485,12 @@ function Dashboard({ stats, foods, onMarkUsed, onAdjustQuantity }) {
   );
 }
 
-function StatCard({ label, value, tone, icon: Icon, compact = false }) {
+function StatCard({ label, value, tone, emoji, compact = false }) {
   return (
     <article className={`stat-card ${tone}`}>
       <div className="stat-card-heading">
         <p>{label}</p>
-        <span><Icon size={20} strokeWidth={2.2} aria-hidden="true" /></span>
+        <span className="stat-emoji" aria-hidden="true">{emoji}</span>
       </div>
       <strong className={compact ? "compact-value" : ""}>{value}</strong>
     </article>
@@ -531,7 +519,9 @@ function FoodList({
           <span className="field-label"><Leaf size={16} aria-hidden="true" />分類</span>
           <select value={filter} onChange={(event) => setFilter(event.target.value)}>
             {categories.map((category) => (
-              <option key={category}>{category}</option>
+              <option key={category} value={category}>
+                {category === "全部" ? "🌈 全部分類" : `${categoryEmoji[category]} ${category}`}
+              </option>
             ))}
           </select>
         </label>
@@ -591,7 +581,7 @@ function FoodSection({ title, foods, emptyText, onMarkUsed, onAdjustQuantity }) 
 function EmptyState({ text }) {
   return (
     <div className="empty-state">
-      <span><Sparkles size={24} aria-hidden="true" /></span>
+      <span className="empty-emoji" aria-hidden="true">✨</span>
       <div>
         <strong>這一區整理得很乾淨</strong>
         <p>{text}</p>
@@ -604,13 +594,12 @@ function FoodCard({ food, onMarkUsed, onAdjustQuantity }) {
   const notePreview = shortNote(food.note);
   const quantityAmount = Number.parseFloat(food.quantity);
   const canDecrease = Number.isFinite(quantityAmount) && quantityAmount > 0 && food.status !== "Used";
-  const StatusIcon = statusIcons[food.status] || CheckCircle2;
 
   return (
     <article className={`food-card ${food.status.toLowerCase()}`}>
       <div className="food-card-header">
         <div className={`food-identity category-${food.category}`}>
-          <span className="food-icon"><CategoryIcon category={food.category} /></span>
+          <span className="food-icon food-emoji" aria-hidden="true">{categoryEmoji[food.category] || "🍽️"}</span>
           <div>
             <h4>{food.name}</h4>
             <p>{food.category} ・ {food.quantity}</p>
@@ -619,7 +608,7 @@ function FoodCard({ food, onMarkUsed, onAdjustQuantity }) {
         <div className="food-card-badges">
           <span className="price-badge">{formatPrice(food.price)}</span>
           <span className={`status-badge ${food.status.toLowerCase()}`}>
-            <StatusIcon size={14} aria-hidden="true" />{statusText[food.status]}
+            <span aria-hidden="true">{statusEmoji[food.status]}</span>{statusText[food.status]}
           </span>
         </div>
       </div>
@@ -791,7 +780,7 @@ function SpendingPanel({ foods, familyName }) {
             <div className="chart-legend">
               {categoryTotals.map((item) => (
                 <span key={item.category}>
-                  <i style={{ background: item.color }}><CategoryIcon category={item.category} size={13} /></i>
+                  <i style={{ background: item.color }} aria-hidden="true">{categoryEmoji[item.category] || "🍽️"}</i>
                   {item.category} {item.percent}%
                 </span>
               ))}
@@ -810,7 +799,7 @@ function SpendingPanel({ foods, familyName }) {
             categoryTotals.map((item) => (
               <div className="ranking-row" key={item.category}>
                 <div>
-                  <strong className="category-ranking-name"><CategoryIcon category={item.category} size={17} />{item.category}</strong>
+                  <strong className="category-ranking-name"><span aria-hidden="true">{categoryEmoji[item.category] || "🍽️"}</span>{item.category}</strong>
                   <span>{formatPrice(item.total)}（{item.percent}%）</span>
                 </div>
                 <div className="ranking-track">
@@ -843,7 +832,7 @@ function SpendingPanel({ foods, familyName }) {
               {visibleFoods.map((food) => (
                 <tr key={food.id}>
                   <td><strong>{food.name}</strong></td>
-                  <td><span className="table-category"><CategoryIcon category={food.category} size={16} />{food.category}</span></td>
+                  <td><span className="table-category"><span aria-hidden="true">{categoryEmoji[food.category] || "🍽️"}</span>{food.category}</span></td>
                   <td>{food.quantity}</td>
                   <td className={food.price > 0 ? "price-cell" : "missing-price"}>
                     {food.price > 0 ? formatPrice(food.price) : "未填"}
@@ -886,7 +875,7 @@ function AddFoodForm({ form, setForm, onSubmit, isSaving, familyName, currentMem
   return (
     <section className="form-panel">
       <div className="form-intro">
-        <span className="form-hero-icon"><ShoppingBasket size={42} strokeWidth={1.9} aria-hidden="true" /></span>
+        <span className="form-hero-icon form-hero-emoji" aria-hidden="true">🧺</span>
         <p className="eyebrow">新增到 {familyName}</p>
         <h3>新增食材</h3>
         <p>目前操作者：<strong>{currentMember}</strong></p>
@@ -898,12 +887,12 @@ function AddFoodForm({ form, setForm, onSubmit, isSaving, familyName, currentMem
           <select value={form.preset} onChange={(event) => selectPreset(event.target.value)} required>
             <option value="">請選擇食材</option>
             {categories.slice(1).map((category) => (
-              <optgroup key={category} label={category}>
+              <optgroup key={category} label={`${categoryEmoji[category]} ${category}`}>
                 {foodPresets
                   .filter((food) => food.category === category)
                   .map((food) => (
                     <option key={food.name} value={food.name}>
-                      {food.name}
+                      {categoryEmoji[food.category]} {food.name}
                     </option>
                   ))}
               </optgroup>
@@ -926,7 +915,7 @@ function AddFoodForm({ form, setForm, onSubmit, isSaving, familyName, currentMem
           分類
           <select value={form.category} onChange={(event) => updateForm("category", event.target.value)}>
             {categories.slice(1).map((category) => (
-              <option key={category}>{category}</option>
+              <option key={category} value={category}>{categoryEmoji[category]} {category}</option>
             ))}
           </select>
         </label>
@@ -1023,7 +1012,7 @@ function FamilyPanel({ family, members, currentMember }) {
       <div className="member-grid">
         {members.map((member) => (
           <article key={member.member_name} className="member-card">
-            <span className="member-avatar"><UserRound size={22} aria-hidden="true" /></span>
+            <span className="member-avatar member-emoji" aria-hidden="true">{memberEmoji(member.member_name, member.role)}</span>
             <strong>{member.member_name} ・ {member.role}</strong>
             <span>已加入家庭冰箱</span>
           </article>
