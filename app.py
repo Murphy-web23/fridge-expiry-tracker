@@ -118,6 +118,7 @@ def render_food_table(df: pd.DataFrame) -> None:
             "name",
             "category",
             "quantity",
+            "price",
             "expiry_date",
             "days_left",
             "status_label",
@@ -129,6 +130,7 @@ def render_food_table(df: pd.DataFrame) -> None:
             "name": "名稱",
             "category": "分類",
             "quantity": "數量",
+            "price": "金額（NT$）",
             "expiry_date": "到期日期",
             "days_left": "剩餘天數",
             "status_label": "狀態",
@@ -239,11 +241,12 @@ def render_dashboard(df: pd.DataFrame, family_code: str) -> None:
     st.info(f"目前顯示家庭代碼 `{family_code}` 的共用冰箱資料。")
 
     stats = get_dashboard_stats(df)
-    col1, col2, col3, col4 = st.columns(4)
+    col1, col2, col3, col4, col5 = st.columns(5)
     col1.metric("總食材數", stats["total"])
     col2.metric("7 天內到期數", stats["due_within_7_days"])
     col3.metric("今天到期數", stats["due_today"])
     col4.metric("已過期數", stats["expired"])
+    col5.metric("冰箱食材金額", f"NT$ {stats['total_value']:,}")
 
     st.divider()
     urgent_df = df[df["status"] == "active"] if not df.empty else df
@@ -273,6 +276,7 @@ def render_add_food_form(family_code: str, member_name: str) -> None:
         name = st.text_input("食材名稱", placeholder="例如：雞胸肉、牛奶、青江菜")
         category = st.selectbox("分類", CATEGORIES, index=0)
         quantity = st.text_input("數量", placeholder="例如：1 包、500g、2 瓶")
+        price = st.number_input("購買金額（NT$）", min_value=0, step=1, help="記錄這筆食材的實際購買金額。")
 
         col1, col2 = st.columns(2)
         purchase_date = col1.date_input("購買日期", value=date.today())
@@ -292,6 +296,7 @@ def render_add_food_form(family_code: str, member_name: str) -> None:
                 name=name.strip(),
                 category=category,
                 quantity=quantity.strip(),
+                price=int(price),
                 purchase_date=purchase_date.isoformat(),
                 expiry_date=expiry_date.isoformat(),
                 note=note.strip(),
@@ -331,6 +336,7 @@ def render_food_list(df: pd.DataFrame, family_code: str, member_name: str) -> No
                 st.subheader(row["name"])
                 st.write(f"分類：{display_text(row['category'], '未分類')}")
                 st.write(f"數量：{display_text(row['quantity'], '未填寫')}")
+                st.write(f"金額：NT$ {int(row['price'] or 0):,}")
                 st.write(f"新增者：{display_text(row['added_by'])}")
                 updated_by = display_text(row["updated_by"], "")
                 if updated_by:
@@ -388,6 +394,13 @@ def render_food_list(df: pd.DataFrame, family_code: str, member_name: str) -> No
                         value=display_text(row["quantity"], ""),
                         key=f"edit_quantity_{row['id']}",
                     )
+                    edit_price = st.number_input(
+                        "購買金額（NT$）",
+                        min_value=0,
+                        step=1,
+                        value=int(row["price"] or 0),
+                        key=f"edit_price_{row['id']}",
+                    )
                     edit_col1, edit_col2 = st.columns(2)
                     edit_purchase_date = edit_col1.date_input(
                         "購買日期",
@@ -418,6 +431,7 @@ def render_food_list(df: pd.DataFrame, family_code: str, member_name: str) -> No
                             name=edit_name.strip(),
                             category=edit_category,
                             quantity=edit_quantity.strip(),
+                            price=int(edit_price),
                             purchase_date=edit_purchase_date.isoformat(),
                             expiry_date=edit_expiry_date.isoformat(),
                             note=edit_note.strip(),
@@ -433,6 +447,7 @@ def render_food_list(df: pd.DataFrame, family_code: str, member_name: str) -> No
             "name",
             "category",
             "quantity",
+            "price",
             "purchase_date",
             "expiry_date",
             "days_left",
@@ -447,6 +462,7 @@ def render_food_list(df: pd.DataFrame, family_code: str, member_name: str) -> No
             "name": "名稱",
             "category": "分類",
             "quantity": "數量",
+            "price": "金額（NT$）",
             "purchase_date": "購買日期",
             "expiry_date": "到期日期",
             "days_left": "剩餘天數",
@@ -466,7 +482,7 @@ def render_about() -> None:
     st.title("關於專案")
     st.write(
         "這是一個使用 Python、Streamlit、SQLite 與 PostgreSQL 製作的食材期限管理工具。"
-        "v5.1 整理顯示文字與時間格式，讓家庭共用時更接近正式產品體驗。"
+        "Streamlit 資料工具版持續保留，並同步支援 v10 的採買金額欄位。"
     )
     st.write(f"目前資料庫模式：{get_database_label()}")
 
@@ -478,6 +494,7 @@ def render_about() -> None:
     st.write("- 家庭代碼共用冰箱資料")
     st.write("- 成員名稱記錄新增者與處理者")
     st.write("- 新增食材與到期日期")
+    st.write("- 記錄採買金額與計算冰箱食材總金額")
     st.write("- 編輯既有食材資料")
     st.write("- 記錄最後更新者與最後更新時間")
     st.write("- 自動計算剩餘天數與狀態標籤")
@@ -501,7 +518,7 @@ def main() -> None:
         "選單",
         ["期限總覽", "新增食材", "食材清單", "關於專案"],
     )
-    st.sidebar.caption("v5.1 版本：優化顯示文字、時間格式與作品集展示細節。")
+    st.sidebar.caption("v10 資料工具版：支援家庭共用、期限管理與採買金額。")
 
     if page == "期限總覽":
         render_dashboard(foods_df, family_code)

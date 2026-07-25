@@ -1,5 +1,7 @@
 from copy import deepcopy
 from datetime import date, datetime
+from decimal import Decimal
+import re
 
 from app.models import FoodCreate
 
@@ -42,7 +44,8 @@ FOODS = {
             "family_code": "demo-home",
             "name": "牛奶",
             "category": "乳製品",
-            "quantity": "一瓶",
+            "quantity": "1 瓶",
+            "price": 95,
             "purchase_date": "2026-07-05",
             "expiry_date": "2026-07-11",
             "status": "active",
@@ -59,7 +62,8 @@ FOODS = {
             "family_code": "demo-home",
             "name": "雞蛋",
             "category": "其他",
-            "quantity": "一盒",
+            "quantity": "1 盒",
+            "price": 120,
             "purchase_date": "2026-07-07",
             "expiry_date": "2026-07-17",
             "status": "active",
@@ -76,7 +80,8 @@ FOODS = {
             "family_code": "demo-home",
             "name": "雞胸肉",
             "category": "肉類",
-            "quantity": "3包",
+            "quantity": "3 包",
+            "price": 249,
             "purchase_date": "2026-07-16",
             "expiry_date": "2026-07-22",
             "status": "active",
@@ -130,6 +135,7 @@ def add_food(family_code: str, food_create: FoodCreate) -> dict:
         "name": food_create.name.strip(),
         "category": food_create.category,
         "quantity": food_create.quantity,
+        "price": food_create.price,
         "purchase_date": food_create.purchase_date,
         "expiry_date": food_create.expiry_date,
         "status": "active",
@@ -155,4 +161,30 @@ def update_food_status(family_code: str, food_id: int, status: str, used_by: str
             food["updated_by"] = used_by
             food["updated_at"] = now
             return with_calculated_fields(food)
+    return None
+
+
+def update_food_quantity(
+    family_code: str,
+    food_id: int,
+    delta: int,
+    updated_by: str,
+) -> dict | None:
+    """以一個單位增減數量，最低停在 0，並保留原本量詞。"""
+    for food in FOODS.get(family_code, []):
+        if food["id"] != food_id:
+            continue
+
+        match = re.match(r"^\s*(\d+(?:\.\d+)?)\s*(.*)$", food["quantity"] or "")
+        if not match:
+            return None
+
+        amount = max(Decimal("0"), Decimal(match.group(1)) + Decimal(delta))
+        amount_text = str(int(amount)) if amount == amount.to_integral() else format(amount.normalize(), "f")
+        unit = match.group(2).strip()
+        now = datetime.now().isoformat(timespec="seconds")
+        food["quantity"] = f"{amount_text} {unit}".strip()
+        food["updated_by"] = updated_by
+        food["updated_at"] = now
+        return with_calculated_fields(food)
     return None

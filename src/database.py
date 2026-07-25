@@ -113,6 +113,7 @@ def init_db() -> None:
                 name TEXT NOT NULL,
                 category TEXT,
                 quantity TEXT,
+                price INTEGER DEFAULT 0,
                 purchase_date TEXT,
                 expiry_date TEXT NOT NULL,
                 note TEXT,
@@ -157,6 +158,8 @@ def init_db() -> None:
 
         existing_columns = _get_columns(conn, "foods")
         _add_column_if_missing(conn, "foods", existing_columns, "family_code", "TEXT DEFAULT 'demo-home'")
+        # v10 新增採買金額；舊資料補成 0，避免資料遷移後出現空值。
+        _add_column_if_missing(conn, "foods", existing_columns, "price", "INTEGER DEFAULT 0")
         _add_column_if_missing(conn, "foods", existing_columns, "added_by", "TEXT")
         _add_column_if_missing(conn, "foods", existing_columns, "used_by", "TEXT")
         _add_column_if_missing(conn, "foods", existing_columns, "used_at", "TEXT")
@@ -338,6 +341,7 @@ def update_food(
     name: str,
     category: str,
     quantity: str,
+    price: int,
     purchase_date: str,
     expiry_date: str,
     note: str,
@@ -356,6 +360,7 @@ def update_food(
                 name = {p},
                 category = {p},
                 quantity = {p},
+                price = {p},
                 purchase_date = {p},
                 expiry_date = {p},
                 note = {p},
@@ -367,6 +372,7 @@ def update_food(
                 name,
                 category,
                 quantity,
+                max(0, int(price)),
                 purchase_date,
                 expiry_date,
                 note,
@@ -384,6 +390,7 @@ def add_food(
     name: str,
     category: str,
     quantity: str,
+    price: int,
     purchase_date: str,
     expiry_date: str,
     note: str,
@@ -391,14 +398,14 @@ def add_food(
 ) -> None:
     created_at = datetime.now().isoformat(timespec="seconds")
     placeholder = _placeholder()
-    placeholders = ", ".join([placeholder] * 10)
+    placeholders = ", ".join([placeholder] * 11)
     with closing(get_connection()) as conn:
         _execute(
             conn,
             """
             INSERT INTO foods
                 (
-                    family_code, name, category, quantity, purchase_date,
+                    family_code, name, category, quantity, price, purchase_date,
                     expiry_date, note, status, added_by, created_at
                 )
             VALUES
@@ -409,6 +416,7 @@ def add_food(
                 name,
                 category,
                 quantity,
+                max(0, int(price)),
                 purchase_date,
                 expiry_date,
                 note,
@@ -427,7 +435,7 @@ def get_all_foods(family_code: str) -> list[dict]:
             conn,
             """
             SELECT
-                id, family_code, name, category, quantity, purchase_date,
+                id, family_code, name, category, quantity, price, purchase_date,
                 expiry_date, note, status, added_by, used_by, used_at,
                 updated_by, updated_at, created_at
             FROM foods

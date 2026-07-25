@@ -1,11 +1,11 @@
-family_code,name,category,quantity,purchase_date,expiry_date,note,status,added_by,used_by
-demo-home,青江菜,蔬菜,1 把,2026-07-01,2026-07-06,先吃葉菜類,active,媽媽,
-demo-home,蘋果,水果,4 顆,2026-07-02,2026-07-15,放冷藏,active,爸爸,
-demo-home,雞胸肉,肉類,2 片,2026-07-03,2026-07-08,可分裝冷凍,active,我,
-demo-home,鮭魚,海鮮,1 片,2026-07-04,2026-07-05,晚餐優先處理,active,媽媽,
-demo-home,鮮奶,乳製品,1 瓶,2026-07-01,2026-07-09,已開封,active,爸爸,
-demo-home,冷凍水餃,冷凍食品,1 包,2026-06-25,2026-08-01,冷凍庫,active,我,
-demo-home,柳橙汁,飲料,1 瓶,2026-07-02,2026-07-04,可能已過期,active,媽媽,
-demo-home,醬油,調味料,1 瓶,2026-06-01,2027-01-01,開封後冷藏,active,爸爸,
-demo-home,豆腐,其他,1 盒,2026-07-04,2026-07-06,煮湯用,used,我,我
-another-home,香蕉,水果,1 串,2026-07-03,2026-07-07,示範不同家庭資料,active,訪客,
+family_code,name,category,quantity,price,purchase_date,expiry_date,note,status,added_by,used_by
+demo-home,青江菜,蔬菜,1 把,45,2026-07-01,2026-07-06,先吃葉菜類,active,媽媽,
+demo-home,蘋果,水果,4 顆,120,2026-07-02,2026-07-15,放冷藏,active,爸爸,
+demo-home,雞胸肉,肉類,2 片,159,2026-07-03,2026-07-08,可分裝冷凍,active,我,
+demo-home,鮭魚,海鮮,1 片,199,2026-07-04,2026-07-05,晚餐優先處理,active,媽媽,
+demo-home,鮮奶,乳製品,1 瓶,95,2026-07-01,2026-07-09,已開封,active,爸爸,
+demo-home,冷凍水餃,冷凍食品,1 包,135,2026-06-25,2026-08-01,冷凍庫,active,我,
+demo-home,柳橙汁,飲料,1 瓶,79,2026-07-02,2026-07-04,可能已過期,active,媽媽,
+demo-home,醬油,調味料,1 瓶,88,2026-06-01,2027-01-01,開封後冷藏,active,爸爸,
+demo-home,豆腐,其他,1 盒,35,2026-07-04,2026-07-06,煮湯用,used,我,我
+another-home,香蕉,水果,1 串,69,2026-07-03,2026-07-07,示範不同家庭資料,active,訪客,

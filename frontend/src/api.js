@@ -25,34 +25,57 @@ export const apiConfig = {
   memberName: DEFAULT_MEMBER_NAME,
 };
 
-export function getFamily() {
-  return requestJson(`/families/${DEFAULT_FAMILY_CODE}`);
+export function getFamilies() {
+  return requestJson("/families");
 }
 
-export function getMembers() {
-  return requestJson(`/families/${DEFAULT_FAMILY_CODE}/members`);
+export function getFamily(familyCode = DEFAULT_FAMILY_CODE) {
+  return requestJson(`/families/${familyCode}`);
 }
 
-export function getFoods() {
-  return requestJson(`/families/${DEFAULT_FAMILY_CODE}/foods`);
+export function getMembers(familyCode = DEFAULT_FAMILY_CODE) {
+  return requestJson(`/families/${familyCode}/members`);
 }
 
-export function createFood(food) {
-  return requestJson(`/families/${DEFAULT_FAMILY_CODE}/foods`, {
+export function getFoods(familyCode = DEFAULT_FAMILY_CODE) {
+  return requestJson(`/families/${familyCode}/foods`);
+}
+
+export function createFood(food, familyCode = DEFAULT_FAMILY_CODE, memberName = DEFAULT_MEMBER_NAME) {
+  return requestJson(`/families/${familyCode}/foods`, {
     method: "POST",
     body: JSON.stringify({
       ...food,
-      added_by: DEFAULT_MEMBER_NAME,
+      added_by: memberName,
     }),
   });
 }
 
-export function markFoodUsed(foodId) {
-  return requestJson(`/families/${DEFAULT_FAMILY_CODE}/foods/${foodId}/status`, {
+export function markFoodUsed(
+  foodId,
+  familyCode = DEFAULT_FAMILY_CODE,
+  memberName = DEFAULT_MEMBER_NAME,
+) {
+  return requestJson(`/families/${familyCode}/foods/${foodId}/status`, {
     method: "PATCH",
     body: JSON.stringify({
       status: "used",
-      used_by: DEFAULT_MEMBER_NAME,
+      used_by: memberName,
+    }),
+  });
+}
+
+export function adjustFoodQuantity(
+  foodId,
+  delta,
+  familyCode = DEFAULT_FAMILY_CODE,
+  memberName = DEFAULT_MEMBER_NAME,
+) {
+  return requestJson(`/families/${familyCode}/foods/${foodId}/quantity`, {
+    method: "PATCH",
+    body: JSON.stringify({
+      delta,
+      updated_by: memberName,
     }),
   });
 }

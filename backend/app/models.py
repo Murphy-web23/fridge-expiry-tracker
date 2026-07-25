@@ -7,6 +7,7 @@ class FoodCreate(BaseModel):
     name: str = Field(..., min_length=1)
     category: str = "其他"
     quantity: str = "未記錄"
+    price: int = Field(default=0, ge=0)
     purchase_date: str | None = None
     expiry_date: str
     note: str = "未記錄"
@@ -18,12 +19,18 @@ class FoodStatusUpdate(BaseModel):
     used_by: str = "訪客"
 
 
+class FoodQuantityUpdate(BaseModel):
+    delta: Literal[-1, 1]
+    updated_by: str = "訪客"
+
+
 class FoodResponse(BaseModel):
     id: int
     family_code: str
     name: str
     category: str
     quantity: str
+    price: int
     purchase_date: str | None
     expiry_date: str
     days_left: int

@@ -4,7 +4,7 @@ Repository name: `fridge-expiry-tracker`
 
 一個使用 Python、Streamlit、SQLite、PostgreSQL、React 與 FastAPI 製作的食材期限管理工具。使用者可以新增冰箱裡的食材、設定到期日期，系統會自動計算剩餘天數，並標示即將過期、今天到期、已過期與已使用的食材。
 
-v9 開始讓 React 前端串接 FastAPI。Streamlit 版本仍保留作為可操作的資料工具，React 前端負責更接近正式產品的操作介面，FastAPI 後端先使用 mock data 驗證 API 路由與前後端資料流。
+v10 在 React 與 FastAPI 串接基礎上，新增採買金額、常用食材與單位快速選取、期限快速設定、家庭與操作者切換，以及卡片數量加減。Streamlit 版本仍保留作為可操作的資料工具，React 前端負責更接近正式產品的操作介面。
 
 ## 專案動機
 
@@ -29,6 +29,16 @@ v9 開始讓 React 前端串接 FastAPI。Streamlit 版本仍保留作為可操�
 - 側邊欄顯示目前家庭名稱與成員列表
 - 使用成員名稱記錄誰新增食材、誰標記已使用
 - 新增食材名稱、分類、數量、購買日期、到期日期與備註
+- 記錄食材購買金額，Dashboard 顯示冰箱食材總金額
+- 使用常用食材下拉選單，自動帶入分類與建議單位
+- 數量與單位分開選擇，減少重複輸入
+- 使用期限快速按鈕設定 3、7、14、30 或 180 天後到期
+- 可從側邊欄直接切換目前家庭與操作者
+- 食材卡片可直接增加或減少一個單位
+- 食材卡片顯示兩行內的簡短備註
+- 消費統計顯示本週、本月與全部採買金額
+- 依分類顯示消費占比、排行與逐筆採買明細
+- 提醒尚未填寫金額的食材，避免統計失真
 - 編輯既有食材資料，包含名稱、分類、數量、日期與備註
 - 記錄最後更新者與最後更新時間
 - 部署環境可使用 PostgreSQL 儲存資料
@@ -47,12 +57,14 @@ v9 開始讓 React 前端串接 FastAPI。Streamlit 版本仍保留作為可操�
 - v7 新增 React / Vite 前端展示版，先以 mock data 展示產品介面
 - v8 新增 FastAPI 後端雛形，讓前端後續可以逐步接 API
 - v9 React 前端開始串接 FastAPI，可讀取家庭資料、食材清單、新增食材與標記已使用
+- v10 加入採買金額、快速新增選項、家庭／操作者切換、數量加減與卡片資訊優化
+- v10 新增消費統計頁，可查看期間金額、分類分析與採買明細
 - 繁體中文介面，適合作為初學者作品集專案
 
 ## Demo Screenshots
 
-以下截圖對應 v7 前端展示版。v9 主要更新在前後端資料串接，介面版型沒有大幅更動，因此暫時沿用 v7 截圖作為產品介面展示。
-v1 到 v9 的版本紀錄仍保留在 `assets/screenshots/`，各版本資料夾也有 `version_notes.txt` 記錄版本演進。
+以下截圖對應 v7 前端展示版。v10 已完成明顯的表單與卡片操作更新，待部署確認後會再補上新版截圖。
+v1 到 v10 的版本紀錄仍保留在 `assets/screenshots/`，各版本資料夾也有 `version_notes.txt` 記錄版本演進。
 
 ### v7 Dashboard 統計
 
@@ -88,19 +100,19 @@ v1 到 v9 的版本紀錄仍保留在 `assets/screenshots/`，各版本資料夾
 - FastAPI
 - Uvicorn
 
-## v9 專案架構定位
+## v10 專案架構定位
 
 目前專案分成三個層次：
 
 - `app.py`：Streamlit 可操作資料工具版，負責驗證資料流程與 PostgreSQL 保存。
-- `frontend/`：React / Vite 前端版，v9 開始呼叫 FastAPI 讀取與更新食材資料。
-- `backend/`：FastAPI 後端雛形，先用 mock data 提供 API 路由，後續再接 PostgreSQL。
+- `frontend/`：React / Vite 前端版，提供快速新增、家庭切換、金額與數量操作。
+- `backend/`：FastAPI 後端雛形，先用 mock data 提供家庭、食材與操作 API，後續再接 PostgreSQL。
 
-v9 的重點不是取代 Streamlit，而是讓 React 與 FastAPI 先形成可展示的前後端資料流。
+v10 的重點不是取代 Streamlit，而是讓 React 與 FastAPI 的資料流更接近家庭日常會使用的操作方式。
 
-## v9 前端串接版
+## v10 前端操作版
 
-目前這個 repo 仍以 Streamlit 作為可執行的資料工具版本。v7 新增 `frontend/` 做產品介面展示，v9 開始讓前端呼叫 FastAPI。
+目前這個 repo 仍保留 Streamlit 資料工具版本。React 前端呼叫 FastAPI，v10 再補上金額與快速操作。
 
 前端串接版目前包含：
 
@@ -111,6 +123,14 @@ v9 的重點不是取代 Streamlit，而是讓 React 與 FastAPI 先形成可展
 - 從 FastAPI 讀取家庭、成員與食材清單
 - 透過 FastAPI 新增食材
 - 透過 FastAPI 標記已使用
+- 透過 FastAPI 增減食材數量
+- 採買金額與冰箱總金額
+- 本週、本月與全部消費統計
+- 類別支出占比、消費排行與採買明細
+- 未填金額完整度提醒
+- 常用食材、單位與期限快速選取
+- 家庭與目前操作者下拉選擇
+- 食材卡片簡短備註
 - 家庭管理資料顯示
 
 相關文件：
@@ -145,6 +165,7 @@ npm run dev
 | v7 | 新增 React / Vite 前端展示版與 mock data 互動 |
 | v8 | 新增 FastAPI 後端雛形與 mock API |
 | v9 | React 前端串接 FastAPI，完成讀取清單、新增食材與標記已使用的前後端資料流 |
+| v10 | 新增採買金額、快速新增、家庭與操作者切換、數量加減、簡短備註與消費統計 |
 
 ## 專案架構
 
@@ -159,11 +180,13 @@ fridge-expiry-tracker/
 ├── backend/
 │   ├── README.md
 │   ├── requirements.txt
-│   └── app/
-│       ├── __init__.py
-│       ├── main.py
-│       ├── mock_data.py
-│       └── models.py
+│   ├── app/
+│   │   ├── __init__.py
+│   │   ├── main.py
+│   │   ├── mock_data.py
+│   │   └── models.py
+│   └── tests/
+│       └── test_api.py
 ├── data/
 │   └── .gitkeep
 ├── docs/
@@ -184,6 +207,8 @@ fridge-expiry-tracker/
 │   ├── database.py
 │   ├── food_manager.py
 │   └── utils.py
+├── tests/
+│   └── test_database.py
 ├── sample_data/
 │   ├── sample_families.csv
 │   ├── sample_family_members.csv
@@ -229,7 +254,9 @@ fridge-expiry-tracker/
         │   └── version_notes.txt
         ├── v8/
         │   └── version_notes.txt
-        └── v9/
+        ├── v9/
+        │   └── version_notes.txt
+        └── v10/
             └── version_notes.txt
 ```
 
@@ -283,7 +310,7 @@ http://127.0.0.1:8008
 
 如需調整，可參考 `frontend/.env.example` 設定 `VITE_API_BASE_URL`。
 
-v9 後端仍使用記憶體 mock data，重新啟動 FastAPI 後會回到預設資料。後續版本會再接 PostgreSQL。
+v10 後端仍使用記憶體 mock data，重新啟動 FastAPI 後會回到預設資料。後續版本會再接 PostgreSQL。
 
 ## FastAPI 後端執行方式
 
@@ -299,7 +326,7 @@ uvicorn app.main:app --reload
 http://127.0.0.1:8000/docs
 ```
 
-若要搭配 v9 前端，建議使用：
+若要搭配 v10 前端，建議使用：
 
 ```bash
 uvicorn app.main:app --reload --port 8008
@@ -311,7 +338,7 @@ uvicorn app.main:app --reload --port 8008
 http://127.0.0.1:8008/docs
 ```
 
-v9 後端目前使用 mock data，重啟服務後會回到預設資料。後續版本會再接 PostgreSQL。
+v10 後端目前使用 mock data，重啟服務後會回到預設資料。後續版本會再接 PostgreSQL。
 
 ## Streamlit Cloud 資料庫設定
 
@@ -357,6 +384,7 @@ DATABASE_URL = "postgresql://username:password@host:5432/database?sslmode=requir
 | name | TEXT | 食材名稱，必填 |
 | category | TEXT | 食材分類 |
 | quantity | TEXT | 數量，例如 1 包、500g、2 瓶 |
+| price | INTEGER | 購買金額，以新台幣整數記錄 |
 | purchase_date | TEXT | 購買日期，格式為 YYYY-MM-DD |
 | expiry_date | TEXT | 到期日期，格式為 YYYY-MM-DD，必填 |
 | note | TEXT | 備註 |
@@ -422,6 +450,14 @@ expiry_date - today
 - 成員名稱記錄新增者
 - 標記已使用時記錄處理者
 - 新增食材資料
+- 記錄採買金額與計算冰箱食材總金額
+- 計算本週、本月與全部期間消費
+- 顯示分類占比、消費排行與採買明細
+- 提醒未填金額資料
+- 常用食材、數量單位與期限快速選取
+- 切換家庭與目前操作者
+- 使用卡片按鈕增加或減少數量
+- 顯示簡短備註
 - 顯示期限總覽統計
 - Dashboard 分區顯示已過期、今天到期與 7 天內到期食材
 - 顯示食材清單
@@ -442,7 +478,8 @@ expiry_date - today
 - 公開部署時，請不要輸入敏感或真實個資。
 - 日期需要手動輸入，尚未支援 OCR 辨識包裝日期。
 - 尚未加入通知功能，因此需要使用者主動開啟 App 查看。
-- v9 React 前端已可串接 FastAPI，但 FastAPI 目前仍使用 mock data，尚未連接 PostgreSQL。
+- v10 React 前端已可串接 FastAPI，但 FastAPI 目前仍使用 mock data，尚未連接 PostgreSQL。
+- 家庭與操作者切換目前是展示用選擇，尚未加入帳號驗證與權限控管。
 
 ## Roadmap
 
@@ -465,6 +502,14 @@ expiry_date - today
 - [x] React / Vite 前端展示版
 - [x] FastAPI 後端雛形
 - [x] React 前端串接 FastAPI
+- [x] 食材採買金額與冰箱總金額
+- [x] 常用食材、單位與期限快速選取
+- [x] 家庭與目前操作者切換
+- [x] 食材數量加減操作
+- [x] 食材卡片簡短備註
+- [x] 本週 / 本月 / 全部消費統計
+- [x] 類別支出占比與消費排行
+- [x] 逐筆採買明細與未填金額提醒
 - [ ] FastAPI 串接 PostgreSQL
 - [ ] 正式登入與權限管理
 - [ ] LINE Messaging API 每日提醒

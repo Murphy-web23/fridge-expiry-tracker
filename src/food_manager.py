@@ -44,6 +44,7 @@ def enrich_food_records(records: list[dict]) -> pd.DataFrame:
         "name",
         "category",
         "quantity",
+        "price",
         "purchase_date",
         "expiry_date",
         "note",
@@ -76,6 +77,7 @@ def get_dashboard_stats(df: pd.DataFrame) -> dict[str, int]:
             "due_within_7_days": 0,
             "due_today": 0,
             "expired": 0,
+            "total_value": 0,
         }
 
     return {
@@ -83,6 +85,7 @@ def get_dashboard_stats(df: pd.DataFrame) -> dict[str, int]:
         "due_within_7_days": int(active_df["days_left"].between(0, 7).sum()),
         "due_today": int((active_df["days_left"] == 0).sum()),
         "expired": int((active_df["days_left"] < 0).sum()),
+        "total_value": int(pd.to_numeric(active_df["price"], errors="coerce").fillna(0).sum()),
     }
 
 

@@ -1,22 +1,40 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.mock_data import FAMILIES, MEMBERS, add_food, list_foods, update_food_status
-from app.models import FamilyResponse, FoodCreate, FoodResponse, FoodStatusUpdate, MemberResponse
+from app.mock_data import (
+    FAMILIES,
+    MEMBERS,
+    add_food,
+    list_foods,
+    update_food_quantity,
+    update_food_status,
+)
+from app.models import (
+    FamilyResponse,
+    FoodCreate,
+    FoodQuantityUpdate,
+    FoodResponse,
+    FoodStatusUpdate,
+    MemberResponse,
+)
 
 
 app = FastAPI(
     title="食材期限管理工具 API",
-    description="v9 FastAPI 雛形，提供 React 前端展示版串接使用。",
-    version="0.2.0",
+    description="v10 FastAPI 雛形，提供 React 前端食材期限與採買金額功能。",
+    version="0.3.0",
 )
 
 # v9 先允許本機 Vite 常用 port，方便前端開發時直接呼叫 API。
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
+        "http://localhost:4174",
+        "http://127.0.0.1:4174",
         "http://localhost:5173",
         "http://127.0.0.1:5173",
+        "http://localhost:5174",
+        "http://127.0.0.1:5174",
         "http://localhost:5177",
         "http://127.0.0.1:5177",
     ],
@@ -28,7 +46,13 @@ app.add_middleware(
 
 @app.get("/health")
 def health_check() -> dict[str, str]:
-    return {"status": "ok", "version": "v9"}
+    return {"status": "ok", "version": "v10"}
+
+
+@app.get("/families", response_model=list[FamilyResponse])
+def get_families() -> list[dict]:
+    """提供前端家庭下拉選單使用。"""
+    return list(FAMILIES.values())
 
 
 @app.get("/families/{family_code}", response_model=FamilyResponse)
@@ -77,4 +101,24 @@ def patch_food_status(
     )
     if not food:
         raise HTTPException(status_code=404, detail="找不到食材資料")
+    return food
+
+
+@app.patch("/families/{family_code}/foods/{food_id}/quantity", response_model=FoodResponse)
+def patch_food_quantity(
+    family_code: str,
+    food_id: int,
+    quantity_update: FoodQuantityUpdate,
+) -> dict:
+    if family_code not in FAMILIES:
+        raise HTTPException(status_code=404, detail="找不到家庭資料")
+
+    food = update_food_quantity(
+        family_code=family_code,
+        food_id=food_id,
+        delta=quantity_update.delta,
+        updated_by=quantity_update.updated_by,
+    )
+    if not food:
+        raise HTTPException(status_code=400, detail="這筆食材的數量格式無法使用加減按鈕")
     return food
