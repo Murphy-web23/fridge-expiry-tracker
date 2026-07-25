@@ -70,26 +70,26 @@ v11 將 React 前端完整改寫為 TypeScript，導入 Tailwind CSS 與 Rechart
 
 ## Demo Screenshots
 
-以下截圖對應 v11 React TypeScript 前端版，展示 Natural Warm Organic 設計系統、期限管理、金額統計、快速新增與家庭操作介面。v11.1 延續相同設計語言，並新增儲存空間分區功能。
+以下截圖以 v11.1 最新畫面為主，展示儲存空間分區與新版新增食材表單；其餘畫面延續 v11 React TypeScript 前端版。
 舊版截圖仍保留在 `assets/screenshots/`，可回顧專案從 Streamlit 原型到 React 介面的版本演進。
 
-### v11 Dashboard
+### v11.1 儲存空間 Dashboard
 
-![v11 Dashboard 統計與過期食材](assets/screenshots/v11/dashboard_top.png)
+![v11.1 Dashboard 儲存空間分區](assets/screenshots/v11.1/dashboard_storage_overview.png)
+
+### v11.1 新增家庭食材
+
+![v11.1 新增家庭食材與儲存位置](assets/screenshots/v11.1/add_food_storage.png)
+
+### v11 期限分區與食材清單
 
 ![v11 Dashboard 今天與七天內到期食材](assets/screenshots/v11/dashboard_sections.png)
-
-### v11 食材清單
 
 ![v11 食材清單畫面](assets/screenshots/v11/food_list.png)
 
 ### v11 消費統計
 
 ![v11 消費統計畫面](assets/screenshots/v11/spending.png)
-
-### v11 新增食材
-
-![v11 新增食材畫面](assets/screenshots/v11/add_food.png)
 
 ### v11 家庭管理
 
