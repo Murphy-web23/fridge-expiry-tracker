@@ -339,11 +339,36 @@ fridge-expiry-tracker/
 
 ## 安裝方式
 
-建議在專案資料夾中建立虛擬環境後再安裝套件。
+Python 套件：
 
 ```bash
 pip install -r requirements.txt
 ```
+
+前端套件：
+
+```bash
+cd frontend
+```
+
+```bash
+npm install
+```
+
+## 三個版本怎麼啟動
+
+這個 repo 同時保留三個可以執行的版本，各自獨立，只開需要的那個就好。
+Windows PowerShell 不支援用 `&&` 串接指令，請一行一行貼。
+
+| 要跑什麼 | 資料夾 | 指令 | 網址 |
+| --- | --- | --- | --- |
+| Streamlit 資料工具版 | 專案根目錄 | `streamlit run app.py` | http://localhost:8501 |
+| FastAPI 後端 | `backend` | `uvicorn app.main:app --reload --port 8008` | http://127.0.0.1:8008/docs |
+| React 前端 | `frontend` | `npm run dev` | http://localhost:5173 |
+
+React 前端需要 FastAPI 一起開著，所以要開兩個終端機視窗，先開後端再開前端。
+
+`app.py` 是 Streamlit 程式，直接用 `python app.py` 或編輯器的 Run 按鈕不會啟動，一定要用 `streamlit run`。
 
 ## Streamlit 執行方式
 
