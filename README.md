@@ -78,7 +78,7 @@ v11 將 React 前端完整改寫為 TypeScript，導入 Tailwind CSS 與 Rechart
 ## Demo Screenshots
 
 以下截圖以 v11.1 最新畫面為主，展示儲存空間分區與新版新增食材表單；其餘畫面延續 v11 React TypeScript 前端版。
-v11.2 的食材清單篩選與編輯視窗截圖尚未補上，待補清單記錄在 `assets/screenshots/v11.2/version_notes.txt`。
+v11.2 的介面變動是在既有畫面上補操作按鈕與彈出視窗，版面與設計語言延續 v11.1，因此沿用同一組截圖。
 舊版截圖仍保留在 `assets/screenshots/`，可回顧專案從 Streamlit 原型到 React 介面的版本演進。
 
 ### v11.1 儲存空間 Dashboard

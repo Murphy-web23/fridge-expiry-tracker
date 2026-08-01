@@ -12,9 +12,5 @@ v11.2 更新紀錄
 10. 後端 unittest 擴充到 11 項，涵蓋編輯、刪除、數量歸零與錯誤情境。
 11. 前端導入 Vitest 與 Testing Library，補上 39 項篩選、表單與操作流程測試。
 
-建議更新的截圖：
-
-- food_list_storage_filter.png：食材清單頁，儲存位置篩選展開或已選擇某個位置。
-- edit_food_dialog.png：食材卡片點「編輯」後的編輯食材視窗。
-- delete_confirm_dialog.png：點「刪除」後的確認視窗。
-- quantity_zero_confirm.png：最後一份按減少時的「這是最後一份了」確認視窗。
+這一版介面變動屬於在既有畫面上補操作按鈕與彈出視窗，整體版面與設計語言延續 v11.1，
+因此 README 仍使用 v11.1 與 v11 的正式截圖，沒有另外補新截圖。
