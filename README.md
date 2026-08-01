@@ -368,7 +368,24 @@ Windows PowerShell 不支援用 `&&` 串接指令，請一行一行貼。
 
 React 前端需要 FastAPI 一起開著，所以要開兩個終端機視窗，先開後端再開前端。
 
-`app.py` 是 Streamlit 程式，直接用 `python app.py` 或編輯器的 Run 按鈕不會啟動，一定要用 `streamlit run`。
+兩個常見錯誤：
+
+- `app.py` 是 Streamlit 程式，直接用 `python app.py` 或對檔案按 Run 不會啟動，一定要用 `streamlit run`。
+- 啟動 FastAPI 前一定要先 `cd backend`。在專案根目錄跑會出現
+  `Error loading ASGI app. Could not import module "app.main"`，因為根目錄的 `app.py` 是 Streamlit 那支。
+
+### 用 VS Code / Cursor 的介面啟動
+
+專案已經附上 `.vscode/launch.json` 與 `.vscode/tasks.json`，不用自己記指令，也不會跑錯資料夾。
+
+執行與偵錯面板（`Ctrl + Shift + D`）可以選：
+
+- `1. Streamlit 資料工具版`
+- `2. FastAPI 後端`
+- `3. React 前端`
+- `React 完整版（後端 + 前端一起開）` — 一鍵同時啟動兩個
+
+或用 `Ctrl + Shift + P` 打 `Run Task`，除了上面幾個，還可以直接跑前後端測試。
 
 ## Streamlit 執行方式
 
