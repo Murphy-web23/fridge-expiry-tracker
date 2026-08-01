@@ -377,18 +377,21 @@ Windows PowerShell 不支援用 `&&` 串接指令，請一行一行貼。
 | --- | --- | --- | --- |
 | Streamlit 資料工具版 | 專案根目錄 | `streamlit run app.py` | http://localhost:8501 |
 | FastAPI 後端 | `backend` | `uvicorn app.main:app --reload --port 8008` | http://127.0.0.1:8008/docs |
-| React 前端 | `frontend` | `npm run dev` | http://localhost:5173 |
+| React 前端 | `frontend` | `npm run dev`（PowerShell 擋住時用 `npm.cmd run dev`） | http://localhost:5173 |
 
 React 前端需要 FastAPI 一起開著，所以要開兩個終端機視窗，先開後端再開前端。
 
 v12 起 Streamlit 版與 FastAPI 本機預設都讀寫同一個 `data/fridge.db`，
 所以在 React 版新增的食材，切到 Streamlit 版重新整理也看得到。
 
-兩個常見錯誤：
+三個常見錯誤：
 
 - `app.py` 是 Streamlit 程式，直接用 `python app.py` 或對檔案按 Run 不會啟動，一定要用 `streamlit run`。
 - 啟動 FastAPI 前一定要先 `cd backend`。在專案根目錄跑會出現
   `Error loading ASGI app. Could not import module "app.main"`，因為根目錄的 `app.py` 是 Streamlit 那支。
+- PowerShell 跑 `npm` 出現「因為這個系統上已停用指令碼執行，所以無法載入 npm.ps1」時，
+  把指令改成 `npm.cmd`（例如 `npm.cmd run dev`、`npm.cmd test`）就會過，不用改系統設定。
+  這是 Windows 預設的執行原則擋掉 npm 的 PowerShell 包裝檔，`npm.cmd` 走的是另一個檔案。
 
 ### 用 VS Code / Cursor 的介面啟動
 

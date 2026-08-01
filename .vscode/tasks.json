@@ -22,7 +22,7 @@
     {
       "label": "啟動 React 前端",
       "type": "shell",
-      "command": "npm run dev",
+      "command": "npm.cmd run dev",
       "options": { "cwd": "${workspaceFolder}/frontend" },
       "isBackground": true,
       "problemMatcher": [],
@@ -45,7 +45,7 @@
     {
       "label": "跑前端測試",
       "type": "shell",
-      "command": "npm test",
+      "command": "npm.cmd test",
       "options": { "cwd": "${workspaceFolder}/frontend" },
       "group": "test",
       "problemMatcher": []
