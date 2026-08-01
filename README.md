@@ -4,7 +4,7 @@ Repository name: `fridge-expiry-tracker`
 
 一個使用 Python、Streamlit、SQLite、PostgreSQL、React、TypeScript 與 FastAPI 製作的食材期限管理工具。使用者可以新增冰箱裡的食材、設定到期日期，系統會自動計算剩餘天數，並標示即將過期、今天到期、已過期與已使用的食材。
 
-v11 將 React 前端完整改寫為 TypeScript，導入 Tailwind CSS 與 Recharts，並建立「大地自然質感」設計系統。v11.1 再加入食材儲存位置與 Dashboard 分區快覽，讓家庭成員除了期限，也能快速掌握食材放在冷藏、冷凍、常溫或飲品櫃。
+v11 將 React 前端完整改寫為 TypeScript，導入 Tailwind CSS 與 Recharts，並建立「大地自然質感」設計系統。v11.1 再加入食材儲存位置與 Dashboard 分區快覽，讓家庭成員除了期限，也能快速掌握食材放在冷藏、冷凍、常溫或飲品櫃。v11.2 把 React 版的 CRUD 補完整：可依儲存位置篩選、可完整編輯與刪除食材、刪除前會先確認，並補上前後端測試。
 
 ## 專案動機
 
@@ -33,6 +33,12 @@ v11 將 React 前端完整改寫為 TypeScript，導入 Tailwind CSS 與 Rechart
 - 使用常用食材下拉選單，自動帶入分類與建議單位
 - 新增食材時可選擇冰箱冷藏、冷凍庫、常溫儲藏或飲品櫃
 - Dashboard 顯示各儲存空間的在庫食材筆數
+- 食材清單可依儲存位置篩選，選單同時顯示各位置的食材筆數
+- 排序可選擇期限由近到遠、由遠到近、依分類或依儲存位置
+- 食材卡片可直接開啟編輯視窗，修改包含儲存位置在內的所有欄位
+- 刪除食材前會跳出確認視窗，避免誤觸
+- 數量減到最後一份時先確認，歸零後自動標記為已使用
+- 補貨讓數量回到 1 以上時，食材會自動回到可使用狀態
 - 數量與單位分開選擇，減少重複輸入
 - 新增食材數量限制為大於零的整數，避免不適用的小數數量
 - 使用期限快速按鈕設定 3、7、14、30 或 180 天後到期
@@ -66,11 +72,13 @@ v11 將 React 前端完整改寫為 TypeScript，導入 Tailwind CSS 與 Rechart
 - v10.2 改用明亮側欄、純色背景、輕陰影與彩色 emoji，提升生活感與資訊辨識度
 - v11 改用 React TypeScript、Tailwind CSS 與 Recharts，建立可重用的自然暖色設計系統與響應式元件
 - v11.1 新增儲存位置欄位、位置預設規則與 Dashboard 儲存空間分區快覽
+- v11.2 補上儲存位置篩選、完整編輯、刪除確認、數量歸零處理與前後端測試
 - 繁體中文介面，適合作為初學者作品集專案
 
 ## Demo Screenshots
 
 以下截圖以 v11.1 最新畫面為主，展示儲存空間分區與新版新增食材表單；其餘畫面延續 v11 React TypeScript 前端版。
+v11.2 的食材清單篩選與編輯視窗截圖尚未補上，待補清單記錄在 `assets/screenshots/v11.2/version_notes.txt`。
 舊版截圖仍保留在 `assets/screenshots/`，可回顧專案從 Streamlit 原型到 React 介面的版本演進。
 
 ### v11.1 儲存空間 Dashboard
@@ -132,11 +140,13 @@ v11 的重點不是取代 Streamlit，而是用可維護的型別、共用元件
 - 冰箱冷藏、冷凍庫、常溫儲藏與飲品櫃分區快覽
 - 已過期、今天到期與 7 天內到期分區提醒
 - 食材卡片
-- 搜尋、分類篩選與排序
+- 搜尋、分類篩選、儲存位置篩選與排序
 - 從 FastAPI 讀取家庭、成員與食材清單
 - 透過 FastAPI 新增食材
+- 透過 FastAPI 編輯食材完整欄位
+- 透過 FastAPI 刪除食材，並在刪除前確認
 - 透過 FastAPI 標記已使用
-- 透過 FastAPI 增減食材數量
+- 透過 FastAPI 增減食材數量，歸零時先確認再標記已使用
 - 採買金額與冰箱總金額
 - 本週、本月與全部消費統計
 - 類別支出占比、消費排行與採買明細
@@ -184,6 +194,7 @@ npm run dev
 | v10.2 | 將深色工具介面改為輕盈生活風格，加入分類、狀態、統計與成員 emoji |
 | v11 | React 前端改寫為 TypeScript，導入 Tailwind CSS、Recharts 與 Natural Warm Organic 設計系統 |
 | v11.1 | 新增食材儲存位置、預設位置規則、卡片位置資訊與 Dashboard 儲存空間分區快覽 |
+| v11.2 | 補上儲存位置篩選、完整編輯與刪除食材、刪除確認視窗、數量歸零處理與前後端測試 |
 
 ## 專案架構
 
@@ -222,14 +233,24 @@ fridge-expiry-tracker/
 │       ├── components/
 │       │   ├── AddFoodForm.tsx
 │       │   ├── Dashboard.tsx
+│       │   ├── Dialog.tsx
+│       │   ├── EditFoodDialog.tsx
 │       │   ├── FamilyPanel.tsx
 │       │   ├── FoodCard.tsx
 │       │   ├── FoodList.tsx
 │       │   ├── Shell.tsx
 │       │   └── SpendingPanel.tsx
+│       ├── tests/
+│       │   ├── App.test.tsx
+│       │   ├── constants.test.ts
+│       │   ├── EditFoodDialog.test.tsx
+│       │   ├── FoodCard.test.tsx
+│       │   ├── foodFilters.test.ts
+│       │   └── setup.ts
 │       ├── App.tsx
 │       ├── api.ts
 │       ├── constants.ts
+│       ├── foodFilters.ts
 │       ├── index.css
 │       ├── main.tsx
 │       ├── types.ts
@@ -300,13 +321,19 @@ fridge-expiry-tracker/
         │   └── version_notes.txt
         ├── v10.2/
         │   └── version_notes.txt
-        └── v11/
-            ├── add_food.png
-            ├── dashboard_sections.png
-            ├── dashboard_top.png
-            ├── family_management.png
-            ├── food_list.png
-            ├── spending.png
+        ├── v11/
+        │   ├── add_food.png
+        │   ├── dashboard_sections.png
+        │   ├── dashboard_top.png
+        │   ├── family_management.png
+        │   ├── food_list.png
+        │   ├── spending.png
+        │   └── version_notes.txt
+        ├── v11.1/
+        │   ├── add_food_storage.png
+        │   ├── dashboard_storage_overview.png
+        │   └── version_notes.txt
+        └── v11.2/
             └── version_notes.txt
 ```
 
@@ -361,6 +388,24 @@ http://127.0.0.1:8008
 如需調整，可參考 `frontend/.env.example` 設定 `VITE_API_BASE_URL`。
 
 目前 FastAPI 後端仍使用記憶體 mock data，重新啟動 FastAPI 後會回到預設資料。後續版本會再接 PostgreSQL。
+
+## 測試執行方式
+
+後端 API 測試：
+
+```bash
+cd backend
+python -m unittest discover -s tests -t .
+```
+
+前端測試、型別檢查與正式版建置：
+
+```bash
+cd frontend
+npm test
+npm run typecheck
+npm run build
+```
 
 ## FastAPI 後端執行方式
 
@@ -507,6 +552,10 @@ expiry_date - today
 - 提醒未填金額資料
 - 常用食材、數量單位與期限快速選取
 - 儲存位置選擇、自動預設與 Dashboard 分區統計
+- 依儲存位置篩選與排序食材清單
+- React 版編輯食材完整欄位，包含儲存位置
+- React 版刪除食材與刪除前確認視窗
+- 數量歸零自動標記已使用，補貨後回到可使用狀態
 - 新增食材數量正整數驗證
 - 切換家庭與目前操作者
 - 使用卡片按鈕增加或減少數量
@@ -531,7 +580,7 @@ expiry_date - today
 - 公開部署時，請不要輸入敏感或真實個資。
 - 日期需要手動輸入，尚未支援 OCR 辨識包裝日期。
 - 尚未加入通知功能，因此需要使用者主動開啟 App 查看。
-- v11 React 前端已可串接 FastAPI，但 FastAPI 目前仍使用 mock data，尚未連接 PostgreSQL。
+- v11.2 React 前端已可完整新增、編輯、刪除食材，但 FastAPI 目前仍使用記憶體 mock data，重啟後資料會回到預設值，尚未連接 PostgreSQL。
 - 家庭與操作者切換目前是展示用選擇，尚未加入帳號驗證與權限控管。
 
 ## Roadmap
@@ -568,6 +617,11 @@ expiry_date - today
 - [x] Recharts 消費圖表
 - [x] 桌面與手機響應式介面
 - [x] 食材儲存位置與 Dashboard 分區快覽
+- [x] React 版依儲存位置篩選食材
+- [x] React 版完整編輯與刪除食材
+- [x] 刪除確認視窗與數量歸零處理
+- [x] FastAPI 編輯與刪除 API
+- [x] 前端 Vitest 與後端 unittest 測試
 - [ ] FastAPI 串接 PostgreSQL
 - [ ] 正式登入與權限管理
 - [ ] LINE Messaging API 每日提醒

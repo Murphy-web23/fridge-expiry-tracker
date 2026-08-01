@@ -53,6 +53,8 @@ export interface FoodCreatePayload {
   note: string;
 }
 
+export type FoodUpdatePayload = FoodCreatePayload;
+
 export interface Family {
   family_code: string;
   family_name: string;
@@ -78,6 +80,11 @@ export interface FoodFormState {
   expiryDate: string;
   note: string;
 }
+
+/** 編輯食材時沿用新增表單的欄位，但不需要「常用食材」快速選單。 */
+export type FoodEditFormState = Omit<FoodFormState, "preset">;
+
+export type StorageFilter = "全部" | StorageLocation;
 
 export interface DashboardStats {
   total: number;

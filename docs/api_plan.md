@@ -65,8 +65,21 @@ v9 讓 React 前端串接 FastAPI。v10 再加入家庭清單、採買金額與�
 | GET | `/families/{family_code}/members` | 取得家庭成員 |
 | GET | `/families/{family_code}/foods` | 取得家庭食材清單 |
 | POST | `/families/{family_code}/foods` | 新增食材 |
+| PUT | `/families/{family_code}/foods/{food_id}` | v11.2 完整編輯食材，含儲存位置 |
+| DELETE | `/families/{family_code}/foods/{food_id}` | v11.2 刪除食材，成功回傳 204 |
 | PATCH | `/families/{family_code}/foods/{food_id}/status` | 標記已使用或恢復 active |
 | PATCH | `/families/{family_code}/foods/{food_id}/quantity` | 將食材數量增加或減少一個單位 |
+
+v11.2 數量規則：數量減到 0 代表食材已經用完，後端會一併把狀態改成 `used` 並記錄使用者；
+之後補貨讓數量回到 1 以上時，狀態會自動回到 `active`。
+
+錯誤回應：
+
+| 狀態碼 | 情境 |
+| --- | --- |
+| 404 | 找不到家庭或找不到食材 |
+| 422 | 日期格式錯誤，或到期日期早於購買日期 |
+| 400 | 這筆食材的數量沒有數字，無法用加減按鈕調整 |
 
 尚未實作但已規劃：
 
@@ -74,8 +87,6 @@ v9 讓 React 前端串接 FastAPI。v10 再加入家庭清單、採買金額與�
 | --- | --- | --- |
 | POST | `/families` | 建立家庭 |
 | POST | `/families/{family_code}/join` | 使用邀請碼加入家庭 |
-| PATCH | `/families/{family_code}/foods/{food_id}` | 編輯食材 |
-| DELETE | `/families/{family_code}/foods/{food_id}` | 刪除食材 |
 
 ## 權限雛形
 
@@ -90,6 +101,5 @@ v6 先規劃角色，不急著正式實作。
 ## 後續實作方向
 
 1. 將目前 `src/database.py` 的資料庫操作整理成可重用 service。
-2. 將 FastAPI 後端接上 PostgreSQL。
-3. 補上編輯與刪除食材 API。
-4. 若要正式公開，需改用真正帳號登入與密碼雜湊。
+2. 將 FastAPI 後端接上 PostgreSQL（v12 重點）。
+3. 若要正式公開，需改用真正帳號登入與密碼雜湊（v13 重點）。

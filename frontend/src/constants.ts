@@ -1,10 +1,20 @@
-import type { FoodFormState, FoodStatusLabel, PageKey, StorageLocation } from "./types";
+import type {
+  Food,
+  FoodEditFormState,
+  FoodFormState,
+  FoodStatusLabel,
+  PageKey,
+  StorageFilter,
+  StorageLocation,
+} from "./types";
 
 export const categories = ["全部", "蔬菜", "水果", "肉類", "海鮮", "乳製品", "冷凍食品", "飲料", "調味料", "其他"];
 
 export const quantityUnits = ["個", "盒", "包", "瓶", "袋", "罐", "條", "份", "箱", "顆", "把", "根", "隻", "片", "kg", "g", "L", "ml", "塊"];
 
 export const storageLocations: StorageLocation[] = ["冰箱冷藏", "冷凍庫", "常溫儲藏", "飲品櫃"];
+
+export const storageFilters: StorageFilter[] = ["全部", ...storageLocations];
 
 export const storageMeta: Record<StorageLocation, { emoji: string; description: string }> = {
   冰箱冷藏: { emoji: "❄️", description: "蔬果、乳製品與冷藏食材" },
@@ -118,6 +128,42 @@ export function createInitialFoodForm(): FoodFormState {
     purchaseDate: today,
     expiryDate: today,
     note: "",
+  };
+}
+
+/** 新增與編輯共用的表單檢查，通過時回傳空字串。 */
+export function validateFoodForm(form: FoodEditFormState): string {
+  if (!form.name.trim()) return "請選擇常用食材，或輸入自訂食材名稱。";
+
+  const quantityAmount = Number(form.quantityAmount);
+  if (!Number.isInteger(quantityAmount) || quantityAmount < 1) return "食材數量請輸入大於零的整數。";
+  if (Number(form.price) < 0) return "購買金額不能小於零。";
+  if (form.expiryDate < form.purchaseDate) return "到期日期不能早於購買日期。";
+
+  return "";
+}
+
+/** 把後端的「2 盒」拆回數量與單位，讓編輯視窗可以沿用新增食材的輸入方式。 */
+export function parseQuantity(quantity: string): { amount: string; unit: string } {
+  const match = /^\s*(\d+)\s*(.*)$/.exec(quantity || "");
+  if (!match) return { amount: "1", unit: quantityUnits[0] };
+
+  const unit = match[2].trim();
+  return { amount: match[1], unit: quantityUnits.includes(unit) ? unit : quantityUnits[0] };
+}
+
+export function createEditFoodForm(food: Food): FoodEditFormState {
+  const { amount, unit } = parseQuantity(food.quantity);
+  return {
+    name: food.name,
+    category: food.category,
+    storageLocation: food.storageLocation,
+    quantityAmount: amount,
+    quantityUnit: unit,
+    price: String(food.price ?? 0),
+    purchaseDate: food.purchaseDate || todayText(),
+    expiryDate: food.expiryDate,
+    note: food.note === "未記錄" ? "" : food.note,
   };
 }
 

@@ -3,15 +3,25 @@ import {
   adjustFoodQuantity,
   apiConfig,
   createFood,
+  deleteFood,
   getFamilies,
   getFamily,
   getFoods,
   getMembers,
   markFoodUsed,
+  updateFood,
 } from "./api";
-import { createInitialFoodForm, defaultStorageLocation, storageLocations } from "./constants";
+import {
+  createInitialFoodForm,
+  defaultStorageLocation,
+  storageLocations,
+  validateFoodForm,
+} from "./constants";
+import { countByStorage, filterAndSortFoods } from "./foodFilters";
 import { AddFoodForm } from "./components/AddFoodForm";
 import { Dashboard } from "./components/Dashboard";
+import { ConfirmDialog } from "./components/Dialog";
+import { EditFoodDialog } from "./components/EditFoodDialog";
 import { FamilyPanel } from "./components/FamilyPanel";
 import { FoodList } from "./components/FoodList";
 import {
@@ -27,8 +37,10 @@ import type {
   Family,
   Food,
   FoodFormState,
+  FoodUpdatePayload,
   Member,
   PageKey,
+  StorageFilter,
 } from "./types";
 
 function normalizeFood(food: ApiFood): Food {
@@ -60,12 +72,17 @@ export default function App() {
   const [familyCode, setFamilyCode] = useState(apiConfig.familyCode);
   const [currentMember, setCurrentMember] = useState(apiConfig.memberName);
   const [filter, setFilter] = useState("全部");
+  const [storageFilter, setStorageFilter] = useState<StorageFilter>("全部");
   const [sortMode, setSortMode] = useState("urgent");
   const [search, setSearch] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [form, setForm] = useState<FoodFormState>(createInitialFoodForm);
+  const [editingFood, setEditingFood] = useState<Food | null>(null);
+  const [deletingFood, setDeletingFood] = useState<Food | null>(null);
+  const [emptyingFood, setEmptyingFood] = useState<Food | null>(null);
 
   useEffect(() => {
     async function loadFamilyOptions() {
@@ -121,34 +138,23 @@ export default function App() {
     };
   }, [foods]);
 
-  const filteredFoods = useMemo(() => {
-    const query = search.trim().toLocaleLowerCase("zh-Hant");
-    const result = foods.filter((food) => {
-      const matchesCategory = filter === "全部" || food.category === filter;
-      const matchesSearch = food.name.toLocaleLowerCase("zh-Hant").includes(query);
-      return matchesCategory && matchesSearch;
-    });
+  const filteredFoods = useMemo(
+    () => filterAndSortFoods(foods, { search, category: filter, storage: storageFilter, sortMode }),
+    [filter, foods, search, sortMode, storageFilter],
+  );
 
-    return [...result].sort((a, b) => {
-      if (sortMode === "category") return a.category.localeCompare(b.category, "zh-Hant");
-      if (sortMode === "safe") return b.daysLeft - a.daysLeft;
-      return a.daysLeft - b.daysLeft;
-    });
-  }, [filter, foods, search, sortMode]);
+  const storageCounts = useMemo(() => countByStorage(foods), [foods]);
+
+  function replaceFood(updatedFood: ApiFood) {
+    const nextFood = normalizeFood(updatedFood);
+    setFoods((current) => current.map((food) => (food.id === nextFood.id ? nextFood : food)));
+  }
 
   async function handleAddFood(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!form.name.trim()) {
-      setErrorMessage("請選擇常用食材，或輸入自訂食材名稱。");
-      return;
-    }
-    const quantityAmount = Number(form.quantityAmount);
-    if (!Number.isInteger(quantityAmount) || quantityAmount < 1) {
-      setErrorMessage("食材數量請輸入大於零的整數。");
-      return;
-    }
-    if (form.expiryDate < form.purchaseDate) {
-      setErrorMessage("到期日期不能早於購買日期。");
+    const validationMessage = validateFoodForm(form);
+    if (validationMessage) {
+      setErrorMessage(validationMessage);
       return;
     }
 
@@ -160,7 +166,7 @@ export default function App() {
           name: form.name.trim(),
           category: form.category,
           storage_location: form.storageLocation,
-          quantity: `${quantityAmount} ${form.quantityUnit}`,
+          quantity: `${Number(form.quantityAmount)} ${form.quantityUnit}`,
           price: Number(form.price) || 0,
           purchase_date: form.purchaseDate,
           expiry_date: form.expiryDate,
@@ -179,23 +185,67 @@ export default function App() {
     }
   }
 
+  async function handleSaveEdit(foodId: number, payload: FoodUpdatePayload) {
+    setErrorMessage("");
+    const updatedFood = await updateFood(foodId, payload, familyCode, currentMember);
+    replaceFood(updatedFood);
+    setEditingFood(null);
+  }
+
+  async function handleConfirmDelete() {
+    if (!deletingFood) return;
+
+    try {
+      setIsConfirming(true);
+      setErrorMessage("");
+      await deleteFood(deletingFood.id, familyCode);
+      setFoods((current) => current.filter((food) => food.id !== deletingFood.id));
+      setDeletingFood(null);
+    } catch {
+      setErrorMessage("刪除食材失敗，請稍後再試。");
+    } finally {
+      setIsConfirming(false);
+    }
+  }
+
   async function handleMarkUsed(id: number) {
     try {
       setErrorMessage("");
-      const updatedFood = await markFoodUsed(id, familyCode, currentMember);
-      setFoods((current) => current.map((food) => (food.id === id ? normalizeFood(updatedFood) : food)));
+      replaceFood(await markFoodUsed(id, familyCode, currentMember));
     } catch {
       setErrorMessage("標記已使用失敗，請稍後再試。");
     }
   }
 
-  async function handleAdjustQuantity(id: number, delta: -1 | 1) {
+  async function adjustQuantity(id: number, delta: -1 | 1) {
     try {
       setErrorMessage("");
-      const updatedFood = await adjustFoodQuantity(id, delta, familyCode, currentMember);
-      setFoods((current) => current.map((food) => (food.id === id ? normalizeFood(updatedFood) : food)));
+      replaceFood(await adjustFoodQuantity(id, delta, familyCode, currentMember));
     } catch {
-      setErrorMessage("更新數量失敗，數量不可低於零。");
+      setErrorMessage("更新數量失敗，這筆食材的數量格式可能不支援加減。");
+    }
+  }
+
+  /** 減到最後一份時先問過使用者，避免不小心把食材直接標記成已使用。 */
+  function handleAdjustQuantity(id: number, delta: -1 | 1) {
+    const food = foods.find((item) => item.id === id);
+    if (delta === -1 && food && Number.parseFloat(food.quantity) === 1) {
+      setEmptyingFood(food);
+      return;
+    }
+
+    void adjustQuantity(id, delta);
+  }
+
+  async function handleConfirmEmpty() {
+    if (!emptyingFood) return;
+
+    try {
+      setIsConfirming(true);
+      await adjustQuantity(emptyingFood.id, -1);
+      setEmptyingFood(null);
+    } finally {
+      setIsConfirming(false);
     }
   }
 
@@ -208,6 +258,12 @@ export default function App() {
     currentMember,
     setFamilyCode,
     setCurrentMember,
+  };
+  const foodActions = {
+    onMarkUsed: handleMarkUsed,
+    onAdjustQuantity: handleAdjustQuantity,
+    onEdit: setEditingFood,
+    onDelete: setDeletingFood,
   };
 
   return (
@@ -225,25 +281,20 @@ export default function App() {
           <MobileFamilySwitcher {...selectorProps} />
           <ApiNotice isLoading={isLoading} errorMessage={errorMessage} onRetry={() => void loadFamilyData()} />
 
-          {activePage === "dashboard" && (
-            <Dashboard
-              stats={stats}
-              foods={foods}
-              onMarkUsed={handleMarkUsed}
-              onAdjustQuantity={handleAdjustQuantity}
-            />
-          )}
+          {activePage === "dashboard" && <Dashboard stats={stats} foods={foods} {...foodActions} />}
           {activePage === "foods" && (
             <FoodList
               foods={filteredFoods}
               filter={filter}
               setFilter={setFilter}
+              storageFilter={storageFilter}
+              setStorageFilter={setStorageFilter}
+              storageCounts={storageCounts}
               sortMode={sortMode}
               setSortMode={setSortMode}
               search={search}
               setSearch={setSearch}
-              onMarkUsed={handleMarkUsed}
-              onAdjustQuantity={handleAdjustQuantity}
+              {...foodActions}
             />
           )}
           {activePage === "spending" && <SpendingPanel foods={foods} familyName={familyName} />}
@@ -262,6 +313,41 @@ export default function App() {
           )}
         </main>
       </div>
+
+      {editingFood && (
+        <EditFoodDialog
+          food={editingFood}
+          currentMember={currentMember}
+          onSave={handleSaveEdit}
+          onClose={() => setEditingFood(null)}
+        />
+      )}
+
+      {deletingFood && (
+        <ConfirmDialog
+          title="確定要刪除這筆食材嗎？"
+          emoji="🗑️"
+          description={`刪除「${deletingFood.name}」後就無法復原，家庭成員也會看不到這筆紀錄。`}
+          confirmLabel="刪除食材"
+          isBusy={isConfirming}
+          onConfirm={() => void handleConfirmDelete()}
+          onCancel={() => setDeletingFood(null)}
+        />
+      )}
+
+      {emptyingFood && (
+        <ConfirmDialog
+          title="這是最後一份了"
+          emoji="🍽️"
+          description={`「${emptyingFood.name}」目前只剩 ${emptyingFood.quantity}，數量歸零後會自動標記為已使用。之後補貨再按增加，就會回到可使用狀態。`}
+          confirmLabel="用完了，標記已使用"
+          cancelLabel="先保留"
+          tone="primary"
+          isBusy={isConfirming}
+          onConfirm={() => void handleConfirmEmpty()}
+          onCancel={() => setEmptyingFood(null)}
+        />
+      )}
     </div>
   );
 }

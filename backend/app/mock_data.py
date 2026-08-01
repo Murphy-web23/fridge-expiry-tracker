@@ -3,7 +3,7 @@ from datetime import date, datetime
 from decimal import Decimal
 import re
 
-from app.models import FoodCreate
+from app.models import FoodCreate, FoodUpdate
 
 
 FAMILIES = {
@@ -128,6 +128,13 @@ def list_foods(family_code: str) -> list[dict]:
     return [with_calculated_fields(food) for food in FOODS.get(family_code, [])]
 
 
+def find_food(family_code: str, food_id: int) -> dict | None:
+    for food in FOODS.get(family_code, []):
+        if food["id"] == food_id:
+            return food
+    return None
+
+
 def add_food(family_code: str, food_create: FoodCreate) -> dict:
     now = datetime.now().isoformat(timespec="seconds")
     current_foods = FOODS.setdefault(family_code, [])
@@ -155,17 +162,50 @@ def add_food(family_code: str, food_create: FoodCreate) -> dict:
     return with_calculated_fields(food)
 
 
+def update_food(family_code: str, food_id: int, food_update: FoodUpdate) -> dict | None:
+    """v11.2 完整編輯食材，可一次修改名稱、分類、儲存位置、數量、金額、日期與備註。"""
+    food = find_food(family_code, food_id)
+    if not food:
+        return None
+
+    food.update(
+        {
+            "name": food_update.name.strip(),
+            "category": food_update.category,
+            "storage_location": food_update.storage_location,
+            "quantity": food_update.quantity.strip(),
+            "price": food_update.price,
+            "purchase_date": food_update.purchase_date,
+            "expiry_date": food_update.expiry_date,
+            "note": food_update.note,
+            "updated_by": food_update.updated_by,
+            "updated_at": datetime.now().isoformat(timespec="seconds"),
+        }
+    )
+    return with_calculated_fields(food)
+
+
+def delete_food(family_code: str, food_id: int) -> bool:
+    food = find_food(family_code, food_id)
+    if not food:
+        return False
+
+    FOODS[family_code].remove(food)
+    return True
+
+
 def update_food_status(family_code: str, food_id: int, status: str, used_by: str) -> dict | None:
-    for food in FOODS.get(family_code, []):
-        if food["id"] == food_id:
-            now = datetime.now().isoformat(timespec="seconds")
-            food["status"] = status
-            food["used_by"] = used_by if status == "used" else None
-            food["used_at"] = now if status == "used" else None
-            food["updated_by"] = used_by
-            food["updated_at"] = now
-            return with_calculated_fields(food)
-    return None
+    food = find_food(family_code, food_id)
+    if not food:
+        return None
+
+    now = datetime.now().isoformat(timespec="seconds")
+    food["status"] = status
+    food["used_by"] = used_by if status == "used" else None
+    food["used_at"] = now if status == "used" else None
+    food["updated_by"] = used_by
+    food["updated_at"] = now
+    return with_calculated_fields(food)
 
 
 def update_food_quantity(
@@ -174,21 +214,34 @@ def update_food_quantity(
     delta: int,
     updated_by: str,
 ) -> dict | None:
-    """以一個單位增減數量，最低停在 0，並保留原本量詞。"""
-    for food in FOODS.get(family_code, []):
-        if food["id"] != food_id:
-            continue
+    """以一個單位增減數量，最低停在 0，並保留原本量詞。
 
-        match = re.match(r"^\s*(\d+(?:\.\d+)?)\s*(.*)$", food["quantity"] or "")
-        if not match:
-            return None
+    v11.2 起數量歸零代表這項食材已經用完，會自動標記為已使用；
+    若之後又補貨讓數量回到 1 以上，狀態也會自動回到可使用。
+    """
+    food = find_food(family_code, food_id)
+    if not food:
+        return None
 
-        amount = max(Decimal("0"), Decimal(match.group(1)) + Decimal(delta))
-        amount_text = str(int(amount)) if amount == amount.to_integral() else format(amount.normalize(), "f")
-        unit = match.group(2).strip()
-        now = datetime.now().isoformat(timespec="seconds")
-        food["quantity"] = f"{amount_text} {unit}".strip()
-        food["updated_by"] = updated_by
-        food["updated_at"] = now
-        return with_calculated_fields(food)
-    return None
+    match = re.match(r"^\s*(\d+(?:\.\d+)?)\s*(.*)$", food["quantity"] or "")
+    if not match:
+        return None
+
+    amount = max(Decimal("0"), Decimal(match.group(1)) + Decimal(delta))
+    amount_text = str(int(amount)) if amount == amount.to_integral() else format(amount.normalize(), "f")
+    unit = match.group(2).strip()
+    now = datetime.now().isoformat(timespec="seconds")
+    food["quantity"] = f"{amount_text} {unit}".strip()
+    food["updated_by"] = updated_by
+    food["updated_at"] = now
+
+    if amount == 0:
+        food["status"] = "used"
+        food["used_by"] = updated_by
+        food["used_at"] = now
+    elif food["status"] == "used":
+        food["status"] = "active"
+        food["used_by"] = None
+        food["used_at"] = None
+
+    return with_calculated_fields(food)

@@ -147,7 +147,7 @@ export function Header({ activePage, onPageChange, onAdd }: HeaderProps) {
             </span>
             <div className="min-w-0">
               <p className="flex items-center gap-1 text-xs font-semibold text-[#8BA888]">
-                <span aria-hidden="true">🌱</span> v11.1 Natural Warm Organic
+                <span aria-hidden="true">🌱</span> v11.2 Natural Warm Organic
               </p>
               <h2 className="flex items-center gap-2 truncate text-xl font-bold text-[#3D3834] sm:text-2xl">
                 <span aria-hidden="true">{meta.emoji}</span>

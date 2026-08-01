@@ -1,11 +1,14 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.mock_data import (
     FAMILIES,
     MEMBERS,
     add_food,
+    delete_food,
+    find_food,
     list_foods,
+    update_food,
     update_food_quantity,
     update_food_status,
 )
@@ -15,14 +18,15 @@ from app.models import (
     FoodQuantityUpdate,
     FoodResponse,
     FoodStatusUpdate,
+    FoodUpdate,
     MemberResponse,
 )
 
 
 app = FastAPI(
     title="食材期限管理工具 API",
-    description="v10 FastAPI 雛形，提供 React 前端食材期限與採買金額功能。",
-    version="0.3.0",
+    description="v11.2 FastAPI 雛形，提供 React 前端食材期限、採買金額與完整編輯刪除功能。",
+    version="0.4.0",
 )
 
 # v9 先允許本機 Vite 常用 port，方便前端開發時直接呼叫 API。
@@ -44,9 +48,20 @@ app.add_middleware(
 )
 
 
+def ensure_family(family_code: str) -> None:
+    if family_code not in FAMILIES:
+        raise HTTPException(status_code=404, detail="找不到家庭資料")
+
+
+def ensure_food(family_code: str, food_id: int) -> None:
+    ensure_family(family_code)
+    if not find_food(family_code, food_id):
+        raise HTTPException(status_code=404, detail="找不到食材資料")
+
+
 @app.get("/health")
 def health_check() -> dict[str, str]:
-    return {"status": "ok", "version": "v10"}
+    return {"status": "ok", "version": "v11.2"}
 
 
 @app.get("/families", response_model=list[FamilyResponse])
@@ -57,31 +72,40 @@ def get_families() -> list[dict]:
 
 @app.get("/families/{family_code}", response_model=FamilyResponse)
 def get_family(family_code: str) -> dict:
-    family = FAMILIES.get(family_code)
-    if not family:
-        raise HTTPException(status_code=404, detail="找不到家庭資料")
-    return family
+    ensure_family(family_code)
+    return FAMILIES[family_code]
 
 
 @app.get("/families/{family_code}/members", response_model=list[MemberResponse])
 def get_members(family_code: str) -> list[dict]:
-    if family_code not in FAMILIES:
-        raise HTTPException(status_code=404, detail="找不到家庭資料")
+    ensure_family(family_code)
     return MEMBERS.get(family_code, [])
 
 
 @app.get("/families/{family_code}/foods", response_model=list[FoodResponse])
 def get_foods(family_code: str) -> list[dict]:
-    if family_code not in FAMILIES:
-        raise HTTPException(status_code=404, detail="找不到家庭資料")
+    ensure_family(family_code)
     return list_foods(family_code)
 
 
 @app.post("/families/{family_code}/foods", response_model=FoodResponse, status_code=201)
 def create_food(family_code: str, food_create: FoodCreate) -> dict:
-    if family_code not in FAMILIES:
-        raise HTTPException(status_code=404, detail="找不到家庭資料")
+    ensure_family(family_code)
     return add_food(family_code, food_create)
+
+
+@app.put("/families/{family_code}/foods/{food_id}", response_model=FoodResponse)
+def put_food(family_code: str, food_id: int, food_update: FoodUpdate) -> dict:
+    """v11.2 完整編輯，前端編輯視窗會一次送出所有欄位。"""
+    ensure_food(family_code, food_id)
+    return update_food(family_code, food_id, food_update)
+
+
+@app.delete("/families/{family_code}/foods/{food_id}", status_code=204)
+def remove_food(family_code: str, food_id: int) -> Response:
+    ensure_food(family_code, food_id)
+    delete_food(family_code, food_id)
+    return Response(status_code=204)
 
 
 @app.patch("/families/{family_code}/foods/{food_id}/status", response_model=FoodResponse)
@@ -90,18 +114,13 @@ def patch_food_status(
     food_id: int,
     status_update: FoodStatusUpdate,
 ) -> dict:
-    if family_code not in FAMILIES:
-        raise HTTPException(status_code=404, detail="找不到家庭資料")
-
-    food = update_food_status(
+    ensure_food(family_code, food_id)
+    return update_food_status(
         family_code=family_code,
         food_id=food_id,
         status=status_update.status,
         used_by=status_update.used_by,
     )
-    if not food:
-        raise HTTPException(status_code=404, detail="找不到食材資料")
-    return food
 
 
 @app.patch("/families/{family_code}/foods/{food_id}/quantity", response_model=FoodResponse)
@@ -110,8 +129,7 @@ def patch_food_quantity(
     food_id: int,
     quantity_update: FoodQuantityUpdate,
 ) -> dict:
-    if family_code not in FAMILIES:
-        raise HTTPException(status_code=404, detail="找不到家庭資料")
+    ensure_food(family_code, food_id)
 
     food = update_food_quantity(
         family_code=family_code,

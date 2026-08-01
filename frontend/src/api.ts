@@ -1,10 +1,10 @@
-import type { ApiFood, Family, FoodCreatePayload, Member } from "./types";
+import type { ApiFood, Family, FoodCreatePayload, FoodUpdatePayload, Member } from "./types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8008";
 const DEFAULT_FAMILY_CODE = "demo-home";
 const DEFAULT_MEMBER_NAME = "訪客";
 
-async function requestJson<T>(path: string, options: RequestInit = {}): Promise<T> {
+async function request(path: string, options: RequestInit = {}): Promise<Response> {
   const response = await fetch(`${API_BASE_URL}${path}`, {
     headers: {
       "Content-Type": "application/json",
@@ -18,6 +18,11 @@ async function requestJson<T>(path: string, options: RequestInit = {}): Promise<
     throw new Error(message || `API request failed: ${response.status}`);
   }
 
+  return response;
+}
+
+async function requestJson<T>(path: string, options: RequestInit = {}): Promise<T> {
+  const response = await request(path, options);
   return response.json() as Promise<T>;
 }
 
@@ -52,6 +57,22 @@ export function createFood(
     method: "POST",
     body: JSON.stringify({ ...food, added_by: memberName }),
   });
+}
+
+export function updateFood(
+  foodId: number,
+  food: FoodUpdatePayload,
+  familyCode = DEFAULT_FAMILY_CODE,
+  memberName = DEFAULT_MEMBER_NAME,
+): Promise<ApiFood> {
+  return requestJson<ApiFood>(`/families/${familyCode}/foods/${foodId}`, {
+    method: "PUT",
+    body: JSON.stringify({ ...food, updated_by: memberName }),
+  });
+}
+
+export async function deleteFood(foodId: number, familyCode = DEFAULT_FAMILY_CODE): Promise<void> {
+  await request(`/families/${familyCode}/foods/${foodId}`, { method: "DELETE" });
 }
 
 export function markFoodUsed(

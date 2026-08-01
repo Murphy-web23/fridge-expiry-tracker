@@ -1,7 +1,8 @@
 import type { LucideIcon } from "lucide-react";
 import { CalendarClock, CircleDollarSign, Clock3, ShoppingBasket, TriangleAlert } from "lucide-react";
 import { formatPrice, storageLocations, storageMeta } from "../constants";
-import type { DashboardStats, Food, StorageLocation } from "../types";
+import { countByStorage } from "../foodFilters";
+import type { DashboardStats, Food } from "../types";
 import { EmptyState } from "./Shell";
 import { FoodCard } from "./FoodCard";
 
@@ -30,16 +31,21 @@ function StatCard({ label, value, emoji, icon: Icon, surface }: StatCardProps) {
   );
 }
 
-interface FoodSectionProps {
+interface FoodActions {
+  onMarkUsed: (id: number) => void | Promise<void>;
+  onAdjustQuantity: (id: number, delta: -1 | 1) => void | Promise<void>;
+  onEdit: (food: Food) => void;
+  onDelete: (food: Food) => void;
+}
+
+interface FoodSectionProps extends FoodActions {
   title: string;
   emoji: string;
   foods: Food[];
   emptyText: string;
-  onMarkUsed: (id: number) => void | Promise<void>;
-  onAdjustQuantity: (id: number, delta: -1 | 1) => void | Promise<void>;
 }
 
-function FoodSection({ title, emoji, foods, emptyText, onMarkUsed, onAdjustQuantity }: FoodSectionProps) {
+function FoodSection({ title, emoji, foods, emptyText, ...actions }: FoodSectionProps) {
   return (
     <section className="border-t border-[#E8E4DE] pt-7">
       <div className="mb-5 flex items-center justify-between gap-4">
@@ -56,7 +62,7 @@ function FoodSection({ title, emoji, foods, emptyText, onMarkUsed, onAdjustQuant
       ) : (
         <div className="grid gap-5 xl:grid-cols-2 2xl:grid-cols-3">
           {foods.map((food) => (
-            <FoodCard key={food.id} food={food} onMarkUsed={onMarkUsed} onAdjustQuantity={onAdjustQuantity} />
+            <FoodCard key={food.id} food={food} {...actions} />
           ))}
         </div>
       )}
@@ -64,30 +70,17 @@ function FoodSection({ title, emoji, foods, emptyText, onMarkUsed, onAdjustQuant
   );
 }
 
-interface DashboardProps {
+interface DashboardProps extends FoodActions {
   stats: DashboardStats;
   foods: Food[];
-  onMarkUsed: (id: number) => void | Promise<void>;
-  onAdjustQuantity: (id: number, delta: -1 | 1) => void | Promise<void>;
 }
 
-export function Dashboard({ stats, foods, onMarkUsed, onAdjustQuantity }: DashboardProps) {
+export function Dashboard({ stats, foods, ...actions }: DashboardProps) {
   const activeFoods = foods.filter((food) => food.status !== "Used");
   const expired = activeFoods.filter((food) => food.daysLeft < 0);
   const today = activeFoods.filter((food) => food.daysLeft === 0);
   const soon = activeFoods.filter((food) => food.daysLeft > 0 && food.daysLeft <= 7);
-  const storageCounts = activeFoods.reduce<Record<StorageLocation, number>>(
-    (counts, food) => {
-      counts[food.storageLocation] += 1;
-      return counts;
-    },
-    {
-      冰箱冷藏: 0,
-      冷凍庫: 0,
-      常溫儲藏: 0,
-      飲品櫃: 0,
-    },
-  );
+  const storageCounts = countByStorage(activeFoods);
 
   return (
     <div className="grid gap-8">
@@ -154,30 +147,9 @@ export function Dashboard({ stats, foods, onMarkUsed, onAdjustQuantity }: Dashbo
         </p>
       </section>
 
-      <FoodSection
-        title="已過期"
-        emoji="⚠️"
-        foods={expired}
-        emptyText="目前沒有已過期食材。"
-        onMarkUsed={onMarkUsed}
-        onAdjustQuantity={onAdjustQuantity}
-      />
-      <FoodSection
-        title="今天到期"
-        emoji="⏰"
-        foods={today}
-        emptyText="目前沒有今天到期食材。"
-        onMarkUsed={onMarkUsed}
-        onAdjustQuantity={onAdjustQuantity}
-      />
-      <FoodSection
-        title="7 天內到期"
-        emoji="✨"
-        foods={soon}
-        emptyText="目前沒有 7 天內到期食材。"
-        onMarkUsed={onMarkUsed}
-        onAdjustQuantity={onAdjustQuantity}
-      />
+      <FoodSection title="已過期" emoji="⚠️" foods={expired} emptyText="目前沒有已過期食材。" {...actions} />
+      <FoodSection title="今天到期" emoji="⏰" foods={today} emptyText="目前沒有今天到期食材。" {...actions} />
+      <FoodSection title="7 天內到期" emoji="✨" foods={soon} emptyText="目前沒有 7 天內到期食材。" {...actions} />
     </div>
   );
 }

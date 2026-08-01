@@ -11,6 +11,9 @@ export const secondaryButtonClass =
   "inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-[#E8E4DE]/60 px-5 py-2.5 font-medium text-[#3D3834] transition-colors hover:bg-[#E8E4DE] focus:outline-none focus:ring-2 focus:ring-[#8BA888] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
 
 export const dangerButtonClass =
-  "inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-[#D98E73] px-5 py-2.5 font-medium text-white transition-colors hover:bg-[#C86D51] focus:outline-none focus:ring-2 focus:ring-[#D98E73] focus:ring-offset-2";
+  "inline-flex min-h-11 items-center justify-center gap-2 rounded-2xl bg-[#D98E73] px-5 py-2.5 font-medium text-white transition-colors hover:bg-[#C86D51] focus:outline-none focus:ring-2 focus:ring-[#D98E73] focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50";
+
+export const iconButtonClass =
+  "grid h-11 w-11 shrink-0 place-items-center rounded-2xl bg-[#E8E4DE]/60 text-[#3D3834] transition-colors hover:bg-[#E8E4DE] focus:outline-none focus:ring-2 focus:ring-[#8BA888] disabled:cursor-not-allowed disabled:opacity-40";
 
 export const labelClass = "grid gap-2 text-sm font-semibold text-[#3D3834]";
