@@ -1,4 +1,4 @@
-import type { ApiFood, Family, FoodCreatePayload, FoodUpdatePayload, Member } from "./types";
+import type { ApiFood, Family, FoodCreatePayload, FoodUpdatePayload, HealthInfo, Member } from "./types";
 
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8008";
 const DEFAULT_FAMILY_CODE = "demo-home";
@@ -31,6 +31,10 @@ export const apiConfig = {
   familyCode: DEFAULT_FAMILY_CODE,
   memberName: DEFAULT_MEMBER_NAME,
 };
+
+export function getHealth(): Promise<HealthInfo> {
+  return requestJson<HealthInfo>("/health");
+}
 
 export function getFamilies(): Promise<Family[]> {
   return requestJson<Family[]>("/families");

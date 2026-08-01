@@ -55,6 +55,15 @@ export interface FoodCreatePayload {
 
 export type FoodUpdatePayload = FoodCreatePayload;
 
+/** v12 後端健康檢查，順便告訴前端資料實際存在哪一種資料庫。 */
+export interface HealthInfo {
+  status: string;
+  version: string;
+  database: string;
+  database_location: string;
+  food_count: number;
+}
+
 export interface Family {
   family_code: string;
   family_name: string;

@@ -8,6 +8,7 @@ vi.mock("../api", async () => {
   const actual = await vi.importActual<typeof import("../api")>("../api");
   return {
     ...actual,
+    getHealth: vi.fn(),
     getFamilies: vi.fn(),
     getFamily: vi.fn(),
     getMembers: vi.fn(),
@@ -56,6 +57,13 @@ const dumplings = makeApiFood({
 
 beforeEach(() => {
   vi.clearAllMocks();
+  vi.mocked(api.getHealth).mockResolvedValue({
+    status: "ok",
+    version: "v12",
+    database: "SQLite",
+    database_location: "C:/fridge/data/fridge.db",
+    food_count: 2,
+  });
   vi.mocked(api.getFamilies).mockResolvedValue([
     { family_code: "demo-home", family_name: "示範家庭", created_at: "2026-07-16T15:29:15" },
   ]);
@@ -77,6 +85,34 @@ async function openFoodList() {
   const [foodListTab] = screen.getAllByRole("button", { name: "食材清單" });
   await userEvent.click(foodListTab);
 }
+
+describe("v12 資料保存狀態", () => {
+  it("側欄顯示後端目前使用的資料庫", async () => {
+    render(<App />);
+
+    expect(await screen.findByText("SQLite 已保存")).toBeInTheDocument();
+  });
+
+  it("家庭管理頁說明資料存在哪裡與筆數", async () => {
+    render(<App />);
+    await screen.findByText("家庭冰箱已同步");
+
+    const [familyTab] = screen.getAllByRole("button", { name: "家庭管理" });
+    await userEvent.click(familyTab);
+
+    expect(screen.getByText("資料保存方式")).toBeInTheDocument();
+    expect(screen.getByText(/目前共有 2 筆紀錄/)).toBeInTheDocument();
+    expect(screen.getByText(/fridge\.db/)).toBeInTheDocument();
+  });
+
+  it("健康檢查失敗時不影響食材資料載入", async () => {
+    vi.mocked(api.getHealth).mockRejectedValue(new Error("offline"));
+    render(<App />);
+
+    await screen.findByText("家庭冰箱已同步");
+    expect(screen.queryByText("SQLite 已保存")).not.toBeInTheDocument();
+  });
+});
 
 describe("v11.2 食材清單操作", () => {
   it("可以依儲存位置篩選食材", async () => {

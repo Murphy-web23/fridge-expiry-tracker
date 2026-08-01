@@ -1,14 +1,15 @@
-import { Crown, UserRound } from "lucide-react";
+import { Crown, Database, UserRound } from "lucide-react";
 import { memberEmoji } from "../constants";
-import type { Family, Member } from "../types";
+import type { Family, HealthInfo, Member } from "../types";
 
 interface FamilyPanelProps {
   family: Family | null;
   members: Member[];
   currentMember: string;
+  health: HealthInfo | null;
 }
 
-export function FamilyPanel({ family, members, currentMember }: FamilyPanelProps) {
+export function FamilyPanel({ family, members, currentMember, health }: FamilyPanelProps) {
   return (
     <div className="grid gap-6">
       <section className="rounded-3xl border border-[#E8E4DE] bg-[#F9F7F2] p-6 lg:p-8">
@@ -18,6 +19,22 @@ export function FamilyPanel({ family, members, currentMember }: FamilyPanelProps
           目前操作者為「{currentMember}」，新增食材與標記使用都會以這個成員留下紀錄。
         </p>
       </section>
+
+      {health && (
+        <section className="rounded-3xl border border-[#E8E4DE] bg-white/80 p-6 shadow-sm">
+          <div className="flex items-center gap-2 font-semibold text-[#3D3834]">
+            <Database className="h-5 w-5 text-[#8BA888]" aria-hidden="true" />
+            資料保存方式
+          </div>
+          <p className="mt-3 text-sm leading-6 text-[#706B65]">
+            這個家庭的食材存在 <span className="font-semibold text-[#3D3834]">{health.database}</span>，
+            目前共有 {health.food_count} 筆紀錄。關掉後端再開，資料一樣會留著。
+          </p>
+          <p className="mt-2 break-all text-xs text-[#9A948C]">
+            {health.database === "SQLite" ? "資料庫檔案" : "資料庫主機"}：{health.database_location}
+          </p>
+        </section>
+      )}
 
       <section className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
         {members.map((member) => (

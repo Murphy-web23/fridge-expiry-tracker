@@ -4,7 +4,7 @@ Repository name: `fridge-expiry-tracker`
 
 一個使用 Python、Streamlit、SQLite、PostgreSQL、React、TypeScript 與 FastAPI 製作的食材期限管理工具。使用者可以新增冰箱裡的食材、設定到期日期，系統會自動計算剩餘天數，並標示即將過期、今天到期、已過期與已使用的食材。
 
-v11 將 React 前端完整改寫為 TypeScript，導入 Tailwind CSS 與 Recharts，並建立「大地自然質感」設計系統。v11.1 再加入食材儲存位置與 Dashboard 分區快覽，讓家庭成員除了期限，也能快速掌握食材放在冷藏、冷凍、常溫或飲品櫃。v11.2 把 React 版的 CRUD 補完整：可依儲存位置篩選、可完整編輯與刪除食材、刪除前會先確認，並補上前後端測試。
+v11 將 React 前端完整改寫為 TypeScript，導入 Tailwind CSS 與 Recharts，並建立「大地自然質感」設計系統。v11.1 再加入食材儲存位置與 Dashboard 分區快覽，讓家庭成員除了期限，也能快速掌握食材放在冷藏、冷凍、常溫或飲品櫃。v11.2 把 React 版的 CRUD 補完整：可依儲存位置篩選、可完整編輯與刪除食材、刪除前會先確認，並補上前後端測試。v12 把 FastAPI 後端從記憶體 mock data 換成真正的資料庫，本機用 SQLite、部署用 PostgreSQL，資料表與 Streamlit 版共用，重新啟動服務後資料仍然存在。
 
 ## 專案動機
 
@@ -73,12 +73,16 @@ v11 將 React 前端完整改寫為 TypeScript，導入 Tailwind CSS 與 Rechart
 - v11 改用 React TypeScript、Tailwind CSS 與 Recharts，建立可重用的自然暖色設計系統與響應式元件
 - v11.1 新增儲存位置欄位、位置預設規則與 Dashboard 儲存空間分區快覽
 - v11.2 補上儲存位置篩選、完整編輯、刪除確認、數量歸零處理與前後端測試
+- v12 FastAPI 後端改為 SQLite / PostgreSQL 保存資料，重啟服務後資料不會消失
+- v12 後端啟動時自動建表與補欄位，並與 Streamlit 版共用同一份家庭資料
+- v12 健康檢查回報目前使用的資料庫，React 側欄與家庭管理頁會顯示資料保存狀態
 - 繁體中文介面，適合作為初學者作品集專案
 
 ## Demo Screenshots
 
 以下截圖以 v11.1 最新畫面為主，展示儲存空間分區與新版新增食材表單；其餘畫面延續 v11 React TypeScript 前端版。
 v11.2 的介面變動是在既有畫面上補操作按鈕與彈出視窗，版面與設計語言延續 v11.1，因此沿用同一組截圖。
+v12 的重點在後端資料保存，畫面只多了側欄的資料庫標籤與家庭管理頁的「資料保存方式」卡片，同樣沿用既有截圖。
 舊版截圖仍保留在 `assets/screenshots/`，可回顧專案從 Streamlit 原型到 React 介面的版本演進。
 
 ### v11.1 儲存空間 Dashboard
@@ -120,15 +124,16 @@ v11.2 的介面變動是在既有畫面上補操作按鈕與彈出視窗，版�
 - FastAPI
 - Uvicorn
 
-## v11 專案架構定位
+## 專案架構定位
 
 目前專案分成三個層次：
 
 - `app.py`：Streamlit 可操作資料工具版，負責驗證資料流程與 PostgreSQL 保存。
 - `frontend/`：React / TypeScript / Tailwind CSS 前端版，提供快速新增、家庭切換、金額、數量操作與 Recharts 消費圖表。
-- `backend/`：FastAPI 後端雛形，先用 mock data 提供家庭、食材與操作 API，後續再接 PostgreSQL。
+- `backend/`：FastAPI 後端，提供家庭、食材與操作 API，v12 起資料存進 SQLite 或 PostgreSQL。
 
 v11 的重點不是取代 Streamlit，而是用可維護的型別、共用元件與一致設計語言，讓 React 與 FastAPI 的資料流更接近家庭日常會使用的操作方式。
+v12 則補上這條資料流最後缺的一段：後端不再把資料放在記憶體，Streamlit 版與 React 版本機預設讀寫同一個 `data/fridge.db`，看到的是同一個冰箱。
 
 ## v11 前端操作版
 
@@ -156,6 +161,7 @@ v11 的重點不是取代 Streamlit，而是用可維護的型別、共用元件
 - 家庭與目前操作者下拉選擇
 - 食材卡片簡短備註
 - 家庭管理資料顯示
+- 側欄與家庭管理頁顯示目前資料存在 SQLite 還是 PostgreSQL
 
 相關文件：
 
@@ -195,6 +201,7 @@ npm run dev
 | v11 | React 前端改寫為 TypeScript，導入 Tailwind CSS、Recharts 與 Natural Warm Organic 設計系統 |
 | v11.1 | 新增食材儲存位置、預設位置規則、卡片位置資訊與 Dashboard 儲存空間分區快覽 |
 | v11.2 | 補上儲存位置篩選、完整編輯與刪除食材、刪除確認視窗、數量歸零處理與前後端測試 |
+| v12 | FastAPI 後端改接 SQLite / PostgreSQL，資料重啟不消失，並拆出 db、repository 與規則模組 |
 
 ## 專案架構
 
@@ -212,10 +219,14 @@ fridge-expiry-tracker/
 │   ├── app/
 │   │   ├── __init__.py
 │   │   ├── main.py
-│   │   ├── mock_data.py
-│   │   └── models.py
+│   │   ├── models.py
+│   │   ├── db.py
+│   │   ├── repository.py
+│   │   ├── food_rules.py
+│   │   └── seed_data.py
 │   └── tests/
-│       └── test_api.py
+│       ├── test_api.py
+│       └── test_food_rules.py
 ├── data/
 │   └── .gitkeep
 ├── docs/
@@ -333,7 +344,9 @@ fridge-expiry-tracker/
         │   ├── add_food_storage.png
         │   ├── dashboard_storage_overview.png
         │   └── version_notes.txt
-        └── v11.2/
+        ├── v11.2/
+        │   └── version_notes.txt
+        └── v12/
             └── version_notes.txt
 ```
 
@@ -367,6 +380,9 @@ Windows PowerShell 不支援用 `&&` 串接指令，請一行一行貼。
 | React 前端 | `frontend` | `npm run dev` | http://localhost:5173 |
 
 React 前端需要 FastAPI 一起開著，所以要開兩個終端機視窗，先開後端再開前端。
+
+v12 起 Streamlit 版與 FastAPI 本機預設都讀寫同一個 `data/fridge.db`，
+所以在 React 版新增的食材，切到 Streamlit 版重新整理也看得到。
 
 兩個常見錯誤：
 
@@ -429,7 +445,8 @@ http://127.0.0.1:8008
 
 如需調整，可參考 `frontend/.env.example` 設定 `VITE_API_BASE_URL`。
 
-目前 FastAPI 後端仍使用記憶體 mock data，重新啟動 FastAPI 後會回到預設資料。後續版本會再接 PostgreSQL。
+v12 起 FastAPI 會把資料寫進 SQLite（預設 `data/fridge.db`），重新啟動後端後資料仍然存在；
+若設定了 `DATABASE_URL`，則改用 PostgreSQL。
 
 ## 測試執行方式
 
@@ -475,7 +492,15 @@ uvicorn app.main:app --reload --port 8008
 http://127.0.0.1:8008/docs
 ```
 
-目前 FastAPI 後端使用 mock data，重啟服務後會回到預設資料。後續版本會再接 PostgreSQL。
+後端資料庫設定：
+
+| 環境變數 | 用途 |
+| --- | --- |
+| `DATABASE_URL` | 設定後改用 PostgreSQL，與 Streamlit 版共用同一組設定 |
+| `FRIDGE_DB_PATH` | 沒有 `DATABASE_URL` 時，指定 SQLite 檔案位置，預設是 `data/fridge.db` |
+
+兩個都不設定就是本機開發模式。後端啟動時會自動建表、補上缺少的欄位，
+資料表全空時才寫入一次示範家庭與示範食材，之後不會重複塞資料。
 
 ## Streamlit Cloud 資料庫設定
 
@@ -520,7 +545,7 @@ DATABASE_URL = "postgresql://username:password@host:5432/database?sslmode=requir
 | family_code | TEXT | 家庭代碼，用來區分不同家庭 |
 | name | TEXT | 食材名稱，必填 |
 | category | TEXT | 食材分類 |
-| storage_location | TEXT | React / FastAPI 使用的儲存位置，可為冰箱冷藏、冷凍庫、常溫儲藏或飲品櫃 |
+| storage_location | TEXT | 儲存位置，可為冰箱冷藏、冷凍庫、常溫儲藏或飲品櫃，v12 起由 FastAPI 寫入資料庫 |
 | quantity | TEXT | 數量，例如 1 包、500g、2 瓶 |
 | price | INTEGER | 購買金額，以新台幣整數記錄 |
 | purchase_date | TEXT | 購買日期，格式為 YYYY-MM-DD |
@@ -551,6 +576,7 @@ DATABASE_URL = "postgresql://username:password@host:5432/database?sslmode=requir
 | id | INTEGER / SERIAL | 成員流水號 |
 | family_code | TEXT | 所屬家庭代碼 |
 | member_name | TEXT | 成員名稱 |
+| role | TEXT | 成員角色，`admin` 或 `member`，v12 起由 FastAPI 寫入資料庫 |
 | joined_at | TEXT | 加入時間 |
 
 ## 狀態標籤說明
@@ -614,6 +640,10 @@ expiry_date - today
 - 標記已使用
 - 刪除食材
 - SQLite 資料表自動建立與欄位遷移
+- FastAPI 重新啟動後，透過 API 新增的食材仍留在資料庫
+- 後端啟動時只在資料表全空時寫入示範資料，重啟不會重複新增
+- 舊的 Streamlit 資料庫直接沿用，缺少的 `storage_location` 與 `role` 欄位自動補上
+- 後端測試改用暫存資料庫，不會動到開發用的 `data/fridge.db`
 
 ## 專案限制
 
@@ -622,8 +652,9 @@ expiry_date - today
 - 公開部署時，請不要輸入敏感或真實個資。
 - 日期需要手動輸入，尚未支援 OCR 辨識包裝日期。
 - 尚未加入通知功能，因此需要使用者主動開啟 App 查看。
-- v11.2 React 前端已可完整新增、編輯、刪除食材，但 FastAPI 目前仍使用記憶體 mock data，重啟後資料會回到預設值，尚未連接 PostgreSQL。
-- 家庭與操作者切換目前是展示用選擇，尚未加入帳號驗證與權限控管。
+- v12 FastAPI 已連接 SQLite 與 PostgreSQL，但 React 版還不能自己建立家庭或用邀請碼加入，需要先在 Streamlit 版建立。
+- 家庭與操作者切換目前是展示用選擇，尚未加入帳號驗證與權限控管，任何人知道家庭代碼就能存取該家庭的 API。
+- 本機 SQLite 適合單機開發與展示，多人同時寫入的情境仍建議設定 `DATABASE_URL` 改用 PostgreSQL。
 
 ## Roadmap
 
@@ -664,7 +695,10 @@ expiry_date - today
 - [x] 刪除確認視窗與數量歸零處理
 - [x] FastAPI 編輯與刪除 API
 - [x] 前端 Vitest 與後端 unittest 測試
-- [ ] FastAPI 串接 PostgreSQL
+- [x] FastAPI 串接 SQLite 與 PostgreSQL
+- [x] 後端啟動時自動建表、補欄位與示範資料
+- [x] 前端顯示目前資料保存方式
+- [ ] React 版建立家庭與邀請碼加入
 - [ ] 正式登入與權限管理
 - [ ] LINE Messaging API 每日提醒
 - [ ] OCR 辨識食品包裝上的有效日期

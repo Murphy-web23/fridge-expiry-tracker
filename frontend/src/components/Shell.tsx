@@ -3,6 +3,7 @@ import {
   BarChart3,
   CalendarClock,
   CheckCircle2,
+  Database,
   House,
   ListChecks,
   Plus,
@@ -99,6 +100,8 @@ function FamilySelectors({
 
 interface SidebarProps extends NavigationProps, FamilySelectorsProps {
   memberNames: string;
+  /** v12：後端回報的資料庫種類，拿不到健康檢查時是空字串。 */
+  databaseLabel: string;
 }
 
 export function Sidebar(props: SidebarProps) {
@@ -121,10 +124,18 @@ export function Sidebar(props: SidebarProps) {
         </div>
         <FamilySelectors {...props} />
         <p className="mt-4 text-xs leading-5 text-[#706B65]">成員：{props.memberNames}</p>
-        <span className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-[#EEF3EB] px-3 py-1 text-xs font-semibold text-[#5D775A]">
-          <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
-          FastAPI 已連線
-        </span>
+        <div className="mt-3 flex flex-wrap gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-[#EEF3EB] px-3 py-1 text-xs font-semibold text-[#5D775A]">
+            <CheckCircle2 className="h-3.5 w-3.5" aria-hidden="true" />
+            FastAPI 已連線
+          </span>
+          {props.databaseLabel && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#F3EFE7] px-3 py-1 text-xs font-semibold text-[#8A7A5C]">
+              <Database className="h-3.5 w-3.5" aria-hidden="true" />
+              {props.databaseLabel} 已保存
+            </span>
+          )}
+        </div>
       </section>
     </aside>
   );
@@ -147,7 +158,7 @@ export function Header({ activePage, onPageChange, onAdd }: HeaderProps) {
             </span>
             <div className="min-w-0">
               <p className="flex items-center gap-1 text-xs font-semibold text-[#8BA888]">
-                <span aria-hidden="true">🌱</span> v11.2 Natural Warm Organic
+                <span aria-hidden="true">🌱</span> v12 Natural Warm Organic
               </p>
               <h2 className="flex items-center gap-2 truncate text-xl font-bold text-[#3D3834] sm:text-2xl">
                 <span aria-hidden="true">{meta.emoji}</span>

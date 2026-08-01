@@ -1,8 +1,24 @@
+import os
+import shutil
+import tempfile
 import unittest
+from pathlib import Path
 
-from fastapi.testclient import TestClient
 
-from app.main import app
+# v12 之後 API 會真的寫進資料庫，測試前先把 SQLite 指到暫存檔，
+# 避免動到開發用的 data/fridge.db；環境變數要在載入 app 之前設定好。
+TEST_DB_DIR = Path(tempfile.mkdtemp(prefix="fridge-test-"))
+os.environ.pop("DATABASE_URL", None)
+os.environ["FRIDGE_DB_PATH"] = str(TEST_DB_DIR / "fridge_test.db")
+
+from fastapi.testclient import TestClient  # noqa: E402
+
+from app import repository  # noqa: E402
+from app.main import app  # noqa: E402
+
+
+def tearDownModule() -> None:
+    shutil.rmtree(TEST_DB_DIR, ignore_errors=True)
 
 
 BASE_FOOD = {
@@ -18,8 +34,12 @@ BASE_FOOD = {
 
 
 class FoodApiTestCase(unittest.TestCase):
-    def setUp(self) -> None:
-        self.client = TestClient(app)
+    @classmethod
+    def setUpClass(cls) -> None:
+        """用 context manager 進入 TestClient，才會跑到 lifespan 的建表與示範資料。"""
+        cls.client_context = TestClient(app)
+        cls.client = cls.client_context.__enter__()
+        cls.addClassCleanup(cls.client_context.__exit__, None, None, None)
 
     def create_food(self, **overrides) -> dict:
         payload = {**BASE_FOOD, "added_by": "Murphy", **overrides}
@@ -28,17 +48,24 @@ class FoodApiTestCase(unittest.TestCase):
         return response.json()
 
     def tearDown(self) -> None:
-        """測試會直接改動 mock data，結束後把新增的測試食材清掉。"""
+        """測試資料會真的寫進資料庫，結束後把新增的測試食材清掉。"""
         for food in self.client.get("/families/demo-home/foods").json():
             if food["name"].startswith("測試"):
                 self.client.delete(f"/families/demo-home/foods/{food['id']}")
 
-    def test_food_workflow(self) -> None:
-        """確認家庭選擇、金額、數量加減與標記使用可以完整串接。"""
+    def test_health_reports_the_current_database(self) -> None:
+        """v12 健康檢查要說明資料存在哪裡。"""
         health = self.client.get("/health")
         self.assertEqual(health.status_code, 200)
-        self.assertEqual(health.json()["version"], "v11.2")
 
+        result = health.json()
+        self.assertEqual(result["version"], "v12")
+        self.assertEqual(result["database"], "SQLite")
+        self.assertIn("fridge_test.db", result["database_location"])
+        self.assertGreater(result["food_count"], 0)
+
+    def test_food_workflow(self) -> None:
+        """確認家庭選擇、金額、數量加減與標記使用可以完整串接。"""
         families = self.client.get("/families")
         self.assertEqual(families.status_code, 200)
         self.assertGreaterEqual(len(families.json()), 1)
@@ -61,6 +88,23 @@ class FoodApiTestCase(unittest.TestCase):
         )
         self.assertEqual(marked_used.status_code, 200)
         self.assertEqual(marked_used.json()["status_label"], "Used")
+
+    def test_food_survives_a_service_restart(self) -> None:
+        """v12 的重點：換一個 TestClient 等於重啟服務，資料要留在資料庫裡。"""
+        food = self.create_food(name="測試味噌")
+
+        with TestClient(app) as restarted_client:
+            reloaded = restarted_client.get("/families/demo-home/foods").json()
+
+        names = [item["name"] for item in reloaded]
+        self.assertIn("測試味噌", names)
+        self.assertEqual([item["id"] for item in reloaded].count(food["id"]), 1)
+
+    def test_seed_data_only_fills_an_empty_database(self) -> None:
+        """重啟不能一直重複塞示範資料，否則使用者的冰箱會愈開愈多牛奶。"""
+        before = repository.count_foods()
+        repository.ensure_seed_data()
+        self.assertEqual(repository.count_foods(), before)
 
     def test_update_food_replaces_every_editable_field(self) -> None:
         """v11.2 編輯視窗會一次送出所有欄位，包含儲存位置。"""
@@ -186,6 +230,14 @@ class FoodApiTestCase(unittest.TestCase):
     def test_unknown_family_returns_404(self) -> None:
         self.assertEqual(self.client.get("/families/no-such-home/foods").status_code, 404)
         self.assertEqual(self.client.delete("/families/no-such-home/foods/1").status_code, 404)
+
+    def test_members_come_from_the_database(self) -> None:
+        members = self.client.get("/families/demo-home/members")
+        self.assertEqual(members.status_code, 200)
+
+        names = [member["member_name"] for member in members.json()]
+        self.assertIn("Murphy", names)
+        self.assertIn("訪客", names)
 
 
 if __name__ == "__main__":

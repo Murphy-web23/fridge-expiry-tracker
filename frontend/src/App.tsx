@@ -7,6 +7,7 @@ import {
   getFamilies,
   getFamily,
   getFoods,
+  getHealth,
   getMembers,
   markFoodUsed,
   updateFood,
@@ -38,6 +39,7 @@ import type {
   Food,
   FoodFormState,
   FoodUpdatePayload,
+  HealthInfo,
   Member,
   PageKey,
   StorageFilter,
@@ -69,6 +71,7 @@ export default function App() {
   const [family, setFamily] = useState<Family | null>(null);
   const [families, setFamilies] = useState<Family[]>([]);
   const [members, setMembers] = useState<Member[]>([]);
+  const [health, setHealth] = useState<HealthInfo | null>(null);
   const [familyCode, setFamilyCode] = useState(apiConfig.familyCode);
   const [currentMember, setCurrentMember] = useState(apiConfig.memberName);
   const [filter, setFilter] = useState("全部");
@@ -104,11 +107,14 @@ export default function App() {
     try {
       setIsLoading(true);
       setErrorMessage("");
-      const [familyData, memberData, foodData] = await Promise.all([
+      // 健康檢查只是附帶資訊，單獨接住錯誤，不要讓它擋掉整頁資料。
+      const [familyData, memberData, foodData, healthData] = await Promise.all([
         getFamily(familyCode),
         getMembers(familyCode),
         getFoods(familyCode),
+        getHealth().catch(() => null),
       ]);
+      setHealth(healthData);
       setFamily(familyData);
       setMembers(memberData);
       setCurrentMember((current) => {
@@ -273,6 +279,7 @@ export default function App() {
         activePage={activePage}
         onPageChange={setActivePage}
         memberNames={memberNames}
+        databaseLabel={health?.database || ""}
       />
 
       <div className="min-w-0">
@@ -309,7 +316,7 @@ export default function App() {
             />
           )}
           {activePage === "family" && (
-            <FamilyPanel family={family} members={members} currentMember={currentMember} />
+            <FamilyPanel family={family} members={members} currentMember={currentMember} health={health} />
           )}
         </main>
       </div>

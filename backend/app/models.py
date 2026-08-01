@@ -88,6 +88,16 @@ class FoodResponse(BaseModel):
     created_at: str
 
 
+class HealthResponse(BaseModel):
+    """v12 健康檢查同時回報資料保存方式，方便前端與展示時說明資料存在哪裡。"""
+
+    status: str
+    version: str
+    database: str
+    database_location: str
+    food_count: int
+
+
 class FamilyResponse(BaseModel):
     family_code: str
     family_name: str

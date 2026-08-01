@@ -1,10 +1,22 @@
-# v10 API 與資料契約
+# v12 API 與資料契約
 
 ## 目標
 
-目前 Streamlit 版本直接操作資料庫。未來若要做 React / Next.js 前端展示版，會需要一層 API 讓前端可以讀取與修改資料。
+Streamlit 版本直接操作資料庫，React 前端則透過這一層 API 讀取與修改同一份資料。
 
-v9 讓 React 前端串接 FastAPI。v10 再加入家庭清單、採買金額與數量增減 API，後續版本再將 API 連接 PostgreSQL。
+v9 讓 React 前端串接 FastAPI。v10 再加入家庭清單、採買金額與數量增減 API。
+v12 把後端從記憶體 mock data 換成真正的資料庫：本機用 SQLite，設定 `DATABASE_URL` 後改用 PostgreSQL，
+資料表與 Streamlit 版共用，因此兩個版本看到同一個冰箱。
+
+## 資料保存
+
+| 環境 | 條件 | 實際位置 |
+| --- | --- | --- |
+| 本機開發 | 沒有設定 `DATABASE_URL` | `data/fridge.db`（可用 `FRIDGE_DB_PATH` 換成別的檔案） |
+| 雲端部署 | 有設定 `DATABASE_URL` | PostgreSQL |
+
+後端啟動時會自動建表並補上缺少的欄位（例如舊資料庫沒有的 `storage_location`），
+資料表全空時才寫入一次示範資料。
 
 ## 資料物件
 
@@ -59,7 +71,7 @@ v9 讓 React 前端串接 FastAPI。v10 再加入家庭清單、採買金額與�
 
 | Method | Path | 說明 |
 | --- | --- | --- |
-| GET | `/health` | 健康檢查 |
+| GET | `/health` | 健康檢查，v12 起一併回報資料庫種類、位置與食材筆數 |
 | GET | `/families` | 取得家庭選單 |
 | GET | `/families/{family_code}` | 取得家庭資料 |
 | GET | `/families/{family_code}/members` | 取得家庭成員 |
@@ -98,8 +110,22 @@ v6 先規劃角色，不急著正式實作。
 | member | 可新增、編輯、標記已使用食材 |
 | viewer | 僅可查看資料 |
 
+### Health
+
+```json
+{
+  "status": "ok",
+  "version": "v12",
+  "database": "SQLite",
+  "database_location": "C:/.../data/fridge.db",
+  "food_count": 4
+}
+```
+
+`database_location` 在 PostgreSQL 只回主機名稱，不會把連線字串裡的帳號密碼送到前端。
+
 ## 後續實作方向
 
-1. 將目前 `src/database.py` 的資料庫操作整理成可重用 service。
-2. 將 FastAPI 後端接上 PostgreSQL（v12 重點）。
-3. 若要正式公開，需改用真正帳號登入與密碼雜湊（v13 重點）。
+1. 補上建立家庭與邀請碼加入家庭的 API，讓 React 版也能自己開新家庭。
+2. 若要正式公開，需改用真正帳號登入與密碼雜湊（v13 重點）。
+3. 食材筆數變多後，`foods` 可以再加上 `family_code` 與 `expiry_date` 的索引。

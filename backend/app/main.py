@@ -1,17 +1,9 @@
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException, Response
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.mock_data import (
-    FAMILIES,
-    MEMBERS,
-    add_food,
-    delete_food,
-    find_food,
-    list_foods,
-    update_food,
-    update_food_quantity,
-    update_food_status,
-)
+from app import db, repository
 from app.models import (
     FamilyResponse,
     FoodCreate,
@@ -19,14 +11,27 @@ from app.models import (
     FoodResponse,
     FoodStatusUpdate,
     FoodUpdate,
+    HealthResponse,
     MemberResponse,
 )
 
 
+API_VERSION = "v12"
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """啟動時建立或補齊資料表，資料庫還空著時才寫入示範資料。"""
+    db.init_db()
+    repository.ensure_seed_data()
+    yield
+
+
 app = FastAPI(
     title="食材期限管理工具 API",
-    description="v11.2 FastAPI 雛形，提供 React 前端食材期限、採買金額與完整編輯刪除功能。",
-    version="0.4.0",
+    description="v12 FastAPI 後端，資料保存在 SQLite 或 PostgreSQL，重啟服務後資料仍在。",
+    version="0.5.0",
+    lifespan=lifespan,
 )
 
 # v9 先允許本機 Vite 常用 port，方便前端開發時直接呼叫 API。
@@ -49,62 +54,71 @@ app.add_middleware(
 
 
 def ensure_family(family_code: str) -> None:
-    if family_code not in FAMILIES:
+    if not repository.get_family(family_code):
         raise HTTPException(status_code=404, detail="找不到家庭資料")
 
 
 def ensure_food(family_code: str, food_id: int) -> None:
     ensure_family(family_code)
-    if not find_food(family_code, food_id):
+    if not repository.find_food(family_code, food_id):
         raise HTTPException(status_code=404, detail="找不到食材資料")
 
 
-@app.get("/health")
-def health_check() -> dict[str, str]:
-    return {"status": "ok", "version": "v11.2"}
+@app.get("/health", response_model=HealthResponse)
+def health_check() -> dict:
+    """v12 起一併回報目前用哪一種資料庫，前端可以直接顯示資料保存狀態。"""
+    return {
+        "status": "ok",
+        "version": API_VERSION,
+        "database": db.database_label(),
+        "database_location": db.database_location(),
+        "food_count": repository.count_foods(),
+    }
 
 
 @app.get("/families", response_model=list[FamilyResponse])
 def get_families() -> list[dict]:
     """提供前端家庭下拉選單使用。"""
-    return list(FAMILIES.values())
+    return repository.list_families()
 
 
 @app.get("/families/{family_code}", response_model=FamilyResponse)
 def get_family(family_code: str) -> dict:
-    ensure_family(family_code)
-    return FAMILIES[family_code]
+    family = repository.get_family(family_code)
+    if not family:
+        raise HTTPException(status_code=404, detail="找不到家庭資料")
+    return family
 
 
 @app.get("/families/{family_code}/members", response_model=list[MemberResponse])
 def get_members(family_code: str) -> list[dict]:
     ensure_family(family_code)
-    return MEMBERS.get(family_code, [])
+    return repository.list_members(family_code)
 
 
 @app.get("/families/{family_code}/foods", response_model=list[FoodResponse])
 def get_foods(family_code: str) -> list[dict]:
     ensure_family(family_code)
-    return list_foods(family_code)
+    return repository.list_foods(family_code)
 
 
 @app.post("/families/{family_code}/foods", response_model=FoodResponse, status_code=201)
 def create_food(family_code: str, food_create: FoodCreate) -> dict:
     ensure_family(family_code)
-    return add_food(family_code, food_create)
+    return repository.add_food(family_code, food_create)
 
 
 @app.put("/families/{family_code}/foods/{food_id}", response_model=FoodResponse)
 def put_food(family_code: str, food_id: int, food_update: FoodUpdate) -> dict:
     """v11.2 完整編輯，前端編輯視窗會一次送出所有欄位。"""
     ensure_food(family_code, food_id)
-    return update_food(family_code, food_id, food_update)
+    return repository.update_food(family_code, food_id, food_update)
 
 
 @app.delete("/families/{family_code}/foods/{food_id}", status_code=204)
 def remove_food(family_code: str, food_id: int) -> Response:
     ensure_food(family_code, food_id)
-    delete_food(family_code, food_id)
+    repository.delete_food(family_code, food_id)
     return Response(status_code=204)
 
 
@@ -115,7 +129,7 @@ def patch_food_status(
     status_update: FoodStatusUpdate,
 ) -> dict:
     ensure_food(family_code, food_id)
-    return update_food_status(
+    return repository.update_food_status(
         family_code=family_code,
         food_id=food_id,
         status=status_update.status,
@@ -131,7 +145,7 @@ def patch_food_quantity(
 ) -> dict:
     ensure_food(family_code, food_id)
 
-    food = update_food_quantity(
+    food = repository.update_food_quantity(
         family_code=family_code,
         food_id=food_id,
         delta=quantity_update.delta,
